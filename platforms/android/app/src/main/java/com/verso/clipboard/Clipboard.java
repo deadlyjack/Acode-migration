@@ -1,8 +1,8 @@
 package com.verso.clipboard;
 
-import runner.Service;
-import runner.Payload;
-import runner.Callback;
+import com.foxdebug.acode.runtime.Service;
+import com.foxdebug.acode.runtime.Payload;
+import com.foxdebug.acode.runtime.Callback;
 
 import org.json.JSONArray;
 import org.json.JSONException;

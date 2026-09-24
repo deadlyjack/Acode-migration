@@ -110,7 +110,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: "27"
+          java-version: "26"
           cache: ${{ (!(inputs.is_PR && inputs.PR_NUMBER) && github.ref == 'refs/heads/main' && 'gradle') || '' }}
 
       - name: Setup Node

@@ -10,7 +10,7 @@
 
 Welcome to Acode Editor - a powerful and versatile code editing tool designed specifically for Android devices. Whether you're working on HTML, CSS, JavaScript, or other programming languages, Acode empowers you to code on-the-go with confidence.
 
-Acode runs in an Android WebView with its own native service bridge. Android sources are tracked directly; native integrations are vendored and built with Java 27, the Gradle 9.8 RC3 wrapper and Android Gradle Plugin 9.4.1. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and build commands.
+Acode runs in an Android WebView with its own native service bridge. Android sources are tracked directly; native integrations are vendored and built with Java 26, the Gradle 9.8 RC3 wrapper and Android Gradle Plugin 9.4.1. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and build commands.
 
 An iOS port is in progress using the same editor and plugin APIs with Swift native services. It is not release-ready; current coverage and remaining features are tracked in [docs/ios-port.md](docs/ios-port.md).
 

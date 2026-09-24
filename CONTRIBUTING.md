@@ -82,8 +82,8 @@ If you prefer not to use Docker at all:
 |------------|---------|
 | **Node.js** | 24 LTS |
 | **npm** | Included with Node.js |
-| **Java JDK** | 27 (Eclipse Temurin) |
-| **Android SDK** | API 36 | 
+| **Java JDK** | 26 (any vendor) |
+| **Android SDK** | API 37 | 
 | **Gradle** | 9.8.0-rc-3 (included wrapper) |
 
 ### Environment Setup
@@ -102,9 +102,9 @@ export ANDROID_HOME="$HOME/Android/Sdk"
 export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin"
 ```
 
-Set `JAVA_HOME` to your Eclipse Temurin JDK 27 installation and add `$JAVA_HOME/bin` to `PATH`. The checked-in daemon criteria require Temurin 27, and the Gradle wrapper downloads the required Gradle version automatically. Android Gradle Plugin 9.4.1 supplies built-in Kotlin support.
+Set `JAVA_HOME` to any JDK 26 installation and add `$JAVA_HOME/bin` to `PATH`. The checked-in daemon criteria require Java 26 (any vendor), and the Gradle wrapper downloads the required Gradle version automatically. Android Gradle Plugin 9.4.1 supplies built-in Kotlin support.
 
-Java 27 support currently requires [Gradle 9.8](https://docs.gradle.org/9.8.0-rc-3/release-notes.html), whose latest release is RC3 as of 2026-09-23. Gradle 9.7.1 is the latest stable release but does not support Java 27. The wrapper pins and verifies the RC3 distribution. Java and Kotlin still emit Java 17 bytecode for Android compatibility; the build itself runs on Java 27.
+The wrapper pins and verifies the Gradle 9.8.0-rc-3 distribution. Java and Kotlin still emit Java 21 bytecode for Android compatibility; the build itself runs on Java 26.
 
 ### Build Steps
 
@@ -342,7 +342,7 @@ their file URIs; parsing them as URL text loses literal filename characters.
 - `src/native`: typed native APIs imported by `src/native/index.ts`; `bridge(service)` binds promise-based actions to the shared transport.
 - `src/platforms/android` and `src/platforms/ios`: platform transports using the shared callback and binary protocol.
 - `platforms/ios`: iOS app, with the template's runtime in `runner` and native services in `runner/lib`. Simulator tests and native dependencies remain alongside the app. See the [port checklist](docs/ios-port.md) for remaining work.
-- `platforms/android/app/src/main/assets/services.json`: native service registration.
+- `platforms/android/app/src/main/java/com/foxdebug/acode/runtime/ServiceRegistry.kt`: native service registration, extended by the `free`/`paid` and `store`/`fdroid` source sets.
 - `package.json`: app ID (`name`), version and Android version code.
 
 The native APIs are available through `Bridge.exec`, `Bridge.file`, `Bridge.http`, `Bridge.clipboard` and `Bridge.websocket`. App source uses these APIs or ordinary imports. For existing third-party plugins, `src/native/pluginCompatibility.js` exposes the legacy `cordova` namespace and module names for the public native APIs, forwarding to the same implementations. Existing direct globals and `deviceready`, pause/resume and hardware-button events remain available. Keep compatibility aliases in that file; do not use them inside Acode or add Cordova dependencies. Advertising and billing APIs retain their build-edition restrictions.
@@ -385,8 +385,6 @@ Release signing still reads the ignored `build.json` and keystore. Rspack compil
 The familiar APK/AAB paths remain available under `platforms/android/app/build/outputs/apk/{debug,release}` and `outputs/bundle/release`.
 
 `node dev/storage_manager.mjs y` or `n` toggles all-files access in the tracked Android manifest for the next build. Build scripts read package identity without rewriting it or reinstalling plugins.
-
-See [the migration verification record](docs/native-migration.md) for behavior coverage and remaining device checks.
 
 ## 🔧 Troubleshooting
 

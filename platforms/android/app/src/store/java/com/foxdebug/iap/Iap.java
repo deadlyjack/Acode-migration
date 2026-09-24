@@ -2,7 +2,7 @@ package com.foxdebug.iap;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
+
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
 import com.android.billingclient.api.BillingClient;
@@ -25,11 +25,10 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import runner.Callback;
-import runner.Host;
-import runner.Service;
-import runner.webView.AppView;
-import runner.Payload;
+import com.foxdebug.acode.runtime.BridgeContext;
+import com.foxdebug.acode.runtime.Callback;
+import com.foxdebug.acode.runtime.Service;
+import com.foxdebug.acode.runtime.Payload;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,8 +40,8 @@ public class Iap extends Service {
   private WeakReference<Activity> activityRef;
   private Callback purchaseUpdated;
 
-  public void initialize(Host host, AppView webView) {
-    super.initialize(host, webView);
+  public void initialize(BridgeContext bridgeContext) {
+    super.initialize(bridgeContext);
     contextRef = new WeakReference<>(host.getContext());
     activityRef = new WeakReference<>(host.getActivity());
     billingClient = getBillingClient();

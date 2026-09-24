@@ -21,7 +21,7 @@ test.each([
 	);
 	expect(getAppConfig()).toEqual({ targetId: name, variant });
 	expect(parseOptions(["android", "prod", "bundle", "fdroid", "--target=device"])).toMatchObject({
-		targetId: name, variant, mode: "p", bundle: true, fdroid: true, target: "device",
+		targetId: name, variant, mode: "p", bundle: true, channel: "fdroid", target: "device",
 	});
 	expect(parseIOSOptions(["ios", "prod", "--target=simulator"])).toMatchObject({
 		targetId: name, variant, mode: "Release", target: "simulator", device: false,

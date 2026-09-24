@@ -10,7 +10,7 @@ if (require.main === module) {
 		const args = process.argv.slice(2);
 		const options = parseOptions(args);
 		if (args.includes("test")) {
-			runGradle(`test${capitalize(options.variant)}DebugUnitTest`, options);
+			runGradle(`test${capitalize(variantFlavor(options))}DebugUnitTest`);
 		} else {
 			const artifact = build(options);
 			if (args.includes("run")) launch(options, artifact);
@@ -30,7 +30,7 @@ function parseOptions(args) {
 	return {
 		...getAppConfig(),
 		mode: args.some((arg) => ["p", "prod"].includes(arg)) ? "p" : "d",
-		fdroid: args.includes("fdroid"),
+		channel: args.includes("fdroid") ? "fdroid" : "store",
 		bundle: args.includes("bundle"),
 		skipWeb: args.includes("--skip-web"),
 		target: args.find((arg) => arg.startsWith("--target="))?.slice(9),
@@ -50,28 +50,19 @@ function build(options) {
 				"--mode",
 				options.mode === "p" ? "production" : "development",
 			],
-			{ ACODE_PLATFORM: "android", ACODE_FDROID: String(options.fdroid) },
+			{ ACODE_PLATFORM: "android", ACODE_FDROID: String(options.channel === "fdroid") },
 		);
 	}
 	const type = options.mode === "p" ? "release" : "debug";
-	const task = `${options.bundle ? "bundle" : "assemble"}${capitalize(options.variant)}${capitalize(type)}`;
-	runGradle(task, options);
+	const flavor = variantFlavor(options);
+	const task = `${options.bundle ? "bundle" : "assemble"}${capitalize(flavor)}${capitalize(type)}`;
+	runGradle(task);
 	const outputs = path.join(root, "platforms/android/app/build/outputs");
 	const extension = options.bundle ? "aab" : "apk";
+	const file = `app-${options.variant}-${options.channel}-${type}.${extension}`;
 	let source = options.bundle
-		? path.join(
-				outputs,
-				"bundle",
-				options.variant + capitalize(type),
-				`app-${options.variant}-${type}.${extension}`,
-			)
-		: path.join(
-				outputs,
-				"apk",
-				options.variant,
-				type,
-				`app-${options.variant}-${type}.${extension}`,
-			);
+		? path.join(outputs, "bundle", flavor + capitalize(type), file)
+		: path.join(outputs, "apk", flavor, type, file);
 	const unsigned = !options.bundle && !fs.existsSync(source);
 	if (unsigned) source = source.replace(/\.apk$/, "-unsigned.apk");
 	const destination = path.join(
@@ -112,15 +103,11 @@ function gradle() {
 		process.platform === "win32" ? "gradlew.bat" : "gradlew",
 	);
 }
-function runGradle(task, options) {
-	run(gradle(), [
-		"-p",
-		"platforms/android",
-		`:app:${task}`,
-		`-Pfdroid=${options.fdroid}`,
-		`-PnodeExecutable=${process.execPath}`,
-		"--console=plain",
-	]);
+function runGradle(task) {
+	run(gradle(), ["-p", "platforms/android", `:app:${task}`, "--console=plain"]);
+}
+function variantFlavor(options) {
+	return options.variant + capitalize(options.channel);
 }
 function capitalize(value) {
 	return value[0].toUpperCase() + value.slice(1);

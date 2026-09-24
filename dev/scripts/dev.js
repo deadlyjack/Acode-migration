@@ -252,7 +252,7 @@ async function launchApp(target, platform, emulator) {
 		"run",
 		"--skip-web",
 	];
-	if (currentOptions.fdroid) args.push("fdroid");
+	if (currentOptions.channel === "fdroid") args.push("fdroid");
 	if (currentOptions.device) args.push("--device");
 	if (target) args.push(`--target=${target}`);
 	if (emulator && platform === "android") args.push("--emulator");
@@ -267,7 +267,7 @@ function startRspackWatch(host, port, proto, onCompiled) {
 	const env = buildSpawnEnv({
 		DEV_MODE: "true",
 		ACODE_PLATFORM: currentOptions.platform,
-		ACODE_FDROID: String(!!currentOptions.fdroid),
+		ACODE_FDROID: String(currentOptions.channel === "fdroid"),
 		DEV_HOST: host,
 		DEV_PORT: String(port),
 		DEV_PROTO: proto,

@@ -1,13 +1,12 @@
 # Keep Acode classes
--keep class runner.** { *; }
+-keep class com.foxdebug.acode.runtime.** { *; }
 
-# Acode discovers plugins by class name from services.json and instantiates them
-# reflectively, and plugins can dispatch actions by method name through
-# reflection too (e.g. Ftp.execute() uses
+# Services are registered by type in ServiceRegistry, but a few of them dispatch
+# actions by method name through reflection (e.g. Ftp.execute() uses
 # getClass().getDeclaredMethod(action, JSONArray, Callback)).
 # Without keeping the members, R8 strips methods such as connect()/listDirectory()
-# and those plugin calls fail at runtime with NoSuchMethodException.
--keep public class * extends runner.Service { *; }
+# and those calls fail at runtime with NoSuchMethodException.
+-keep public class * extends com.foxdebug.acode.runtime.Service { *; }
 
 # WebView JS bridge methods are invoked by name from JavaScript.
 -keepclassmembers class * {

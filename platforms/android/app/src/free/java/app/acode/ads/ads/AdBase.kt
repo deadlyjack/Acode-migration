@@ -13,7 +13,7 @@ import com.google.android.gms.ads.AdValue
 import com.google.android.gms.ads.OnPaidEventListener
 import com.google.android.gms.ads.ResponseInfo
 import com.google.android.gms.ads.rewarded.RewardItem
-import runner.webView.AppView
+import com.foxdebug.acode.runtime.webview.AppWebView
 import org.json.JSONObject
 
 fun getParentView(view: View?): ViewGroup? {
@@ -35,7 +35,7 @@ abstract class AdBase(ctx: ExecuteContext) {
 
     protected val plugin = ctx.plugin
 
-    private val BridgeWebView: AppView get() = plugin.webView
+    private val BridgeWebView: AppWebView get() = plugin.webView!!
     val webView: View get() = BridgeWebView.view
     val webViewParent: ViewGroup get() = (webView.parent as? ViewGroup) ?: throw IllegalStateException("webView has no parent")
 
@@ -49,7 +49,7 @@ abstract class AdBase(ctx: ExecuteContext) {
         }
     }
 
-    open fun onConfigurationChanged(newConfig: Configuration) {}
+    open fun onConfigurationChanged(newConfig: Configuration?) {}
     open fun onPause(multitasking: Boolean) {}
     open fun onResume(multitasking: Boolean) {}
     open fun onDestroy() {

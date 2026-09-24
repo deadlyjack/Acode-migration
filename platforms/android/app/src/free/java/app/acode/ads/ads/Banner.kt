@@ -264,7 +264,7 @@ class Banner(ctx: ExecuteContext) : AdBase(ctx) {
         ctx.resolve()
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
+    override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         plugin.activity.runOnUiThread {
             webView.post {

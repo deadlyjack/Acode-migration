@@ -17,7 +17,7 @@ describe("appIcons", () => {
 	it("keeps picker IDs, native mappings, and launcher aliases in sync", () => {
 		const native = fs.readFileSync(
 			new URL(
-				"../../platforms/android/app/src/main/java/com/foxdebug/system/System.java",
+				"../../platforms/android/app/src/main/java/com/foxdebug/acode/system/System.java",
 				import.meta.url,
 			),
 			"utf8",
@@ -35,9 +35,14 @@ describe("appIcons", () => {
 			"application/xml",
 		);
 		expect(
-			[...config.querySelectorAll("activity-alias")]
-				.map((alias) => alias.getAttribute("android:name")),
+			[...config.querySelectorAll("activity-alias")].map((alias) =>
+				resolveAlias(alias.getAttribute("android:name")),
+			),
 		).toEqual(mappings.map(([, name]) => `\${applicationId}.${name}`));
 		window.happyDOM.abort();
 	});
 });
+
+function resolveAlias(name) {
+	return name.startsWith(".") ? `\${applicationId}${name}` : name;
+}

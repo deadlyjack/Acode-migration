@@ -10,7 +10,7 @@ it.skipIf(!hasJava)(
 	() => {
 		const source = readFileSync(
 			new URL(
-				"../../platforms/android/app/src/main/java/com/foxdebug/sdcard/WorkspaceIndex.java",
+				"../../platforms/android/app/src/main/java/com/foxdebug/acode/sdcard/WorkspaceIndex.java",
 				import.meta.url,
 			),
 			"utf8",

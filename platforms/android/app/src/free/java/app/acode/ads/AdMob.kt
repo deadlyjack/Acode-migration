@@ -18,9 +18,9 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.WebView
 import com.google.android.gms.ads.MobileAds
-import runner.Callback
-import runner.Service
-import runner.Payload
+import com.foxdebug.acode.runtime.Callback
+import com.foxdebug.acode.runtime.Service
+import com.foxdebug.acode.runtime.Payload
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -85,7 +85,7 @@ class AdMob : Service() {
         readyCallbackContext = ctx.callbackContext
         emit(
             Events.READY,
-            mapOf("isRunningInTestLab" to isRunningInTestLab(host.activity))
+            mapOf("isRunningInTestLab" to isRunningInTestLab(host!!.activity))
         )
         return true
     }
@@ -143,14 +143,14 @@ class AdMob : Service() {
 
     private fun executeAdDestroy(ctx: ExecuteContext) {
         val id = ctx.optId() ?: return ctx.reject("id is required")
-        host.activity.runOnUiThread {
+        host!!.activity.runOnUiThread {
             ads[id]?.onDestroy()
             ctx.resolve()
         }
     }
 
     private fun executeAdIsLoaded(ctx: ExecuteContext) {
-        host.activity.runOnUiThread {
+        host!!.activity.runOnUiThread {
             ctx.optAdOrReject()?.let { ad ->
                 ctx.resolve(ad.isLoaded)
             }
@@ -158,7 +158,7 @@ class AdMob : Service() {
     }
 
     private fun executeAdLoad(ctx: ExecuteContext) {
-        host.activity.runOnUiThread {
+        host!!.activity.runOnUiThread {
             ctx.optAdOrReject()?.let { ad ->
                 ad.load(ctx)
             }
@@ -166,7 +166,7 @@ class AdMob : Service() {
     }
 
     private fun executeAdShow(ctx: ExecuteContext) {
-        host.activity.runOnUiThread {
+        host!!.activity.runOnUiThread {
             ctx.optAdOrReject()?.let { ad ->
                 if (shouldDispatchAdShow(ad.isLoaded, ad.canShowWhileLoading)) {
                     ad.show(ctx)
@@ -178,24 +178,24 @@ class AdMob : Service() {
     }
 
     private fun executeAdHide(ctx: ExecuteContext) {
-        host.activity.runOnUiThread {
+        host!!.activity.runOnUiThread {
             ctx.optAdOrReject()?.hide(ctx)
         }
     }
 
     private fun executeWebviewGoto(ctx: ExecuteContext) {
-        host.activity.runOnUiThread {
-            val webView = webView.view as WebView
+        host!!.activity.runOnUiThread {
+            val webView = webView!!.view as WebView
             webView.loadUrl(ctx.args.getString(0))
             ctx.resolve()
         }
     }
 
-    val activity: Activity get() = host.activity
+    val activity: Activity get() = host!!.activity
 
     val contentView: ViewGroup?
         get() = activity.findViewById(android.R.id.content)
-            ?: getParentView(webView.view)
+            ?: getParentView(webView!!.view)
 
     fun emit(eventName: String, data: Map<String, Any?>) {
 
@@ -205,7 +205,7 @@ class AdMob : Service() {
         readyCallbackContext?.sendPayload(result) ?: eventQueue.add(result)
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
+    override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         ads.forEach { (_, ad) ->
             ad.onConfigurationChanged(newConfig)
@@ -242,7 +242,7 @@ class AdMob : Service() {
         val previousAds = synchronized(ads) {
             ads.values.toList().also { ads.clear() }
         }
-        host.activity.runOnUiThread {
+        host!!.activity.runOnUiThread {
             for (ad in previousAds) {
                 ad.onDestroy()
             }

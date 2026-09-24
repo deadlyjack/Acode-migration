@@ -1,3 +1,5 @@
 package com.foxdebug.acode;
 
-public final class MainActivity extends runner.MainActivity {}
+import com.foxdebug.acode.runtime.BaseWebActivity;
+
+public final class MainActivity extends BaseWebActivity {}

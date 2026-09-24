@@ -2,8 +2,8 @@ package app.acode.ads
 
 import app.acode.ads.ads.AdBase
 import android.app.Activity
-import runner.Callback
-import runner.Payload
+import com.foxdebug.acode.runtime.Callback
+import com.foxdebug.acode.runtime.Payload
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Collections.synchronizedMap
@@ -18,7 +18,7 @@ data class ExecuteContext(
 ) {
     val opts: JSONObject by lazy { args.optJSONObject(0) }
 
-    val activity: Activity get() = plugin.host.activity
+    val activity: Activity get() = plugin.host!!.activity
 
     fun optBoolean(name: String): Boolean? {
         return if (opts.has(name)) opts.optBoolean(name) else null
@@ -45,7 +45,7 @@ data class ExecuteContext(
         callbackContext.error(msg)
     }
 
-    fun sendResult(result: Payload?) {
+    fun sendResult(result: Payload) {
         callbackContext.sendPayload(result)
     }
 
