@@ -1,9 +1,5 @@
 import XCTest
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 final class FileRootHistoryTests: XCTestCase {
     func testOldPathsFollowTheirAuthorizedRootAcrossSeveralInstalls() throws {

@@ -9,11 +9,9 @@ final class PreviewViewController: UIViewController {
     let theme: [String: Any]
     let address = UITextField()
     let content = UIView()
-    let toolbar = UIToolbar()
-    let progress = UIProgressView(progressViewStyle: .bar)
-    var backButton: UIBarButtonItem!
-    var forwardButton: UIBarButtonItem!
-    var menuButton: UIBarButtonItem!
+    let toolbar = UIStackView()
+    let progress = UIActivityIndicatorView(style: .medium)
+    let menuButton = UIButton(type: .system)
     var consoleVisible = false
     var consoleAvailable = false
     var disableCache = false
@@ -65,50 +63,22 @@ final class PreviewViewController: UIViewController {
         #if DEBUG
         webView.isInspectable = true
         #endif
-        address.delegate = self
-        address.text = initialURL.absoluteString
-        address.textColor = foreground
-        address.font = .preferredFont(forTextStyle: .subheadline)
-        address.keyboardType = .URL
-        address.returnKeyType = .go
-        address.autocapitalizationType = .none
-        address.autocorrectionType = .no
-        address.clearButtonMode = .whileEditing
-        address.isEnabled = !consoleOnly
-        address.accessibilityLabel = "Preview address"
-        backButton = UIBarButtonItem(image: UIImage(systemName: "chevron.left"), style: .plain, target: self, action: #selector(goBack))
-        backButton.accessibilityLabel = "Back"
-        forwardButton = UIBarButtonItem(image: UIImage(systemName: "chevron.right"), style: .plain, target: self, action: #selector(goForward))
-        forwardButton.accessibilityLabel = "Forward"
-        menuButton = UIBarButtonItem(image: UIImage(systemName: "ellipsis.circle"), style: .plain, target: nil, action: nil)
-        menuButton.accessibilityLabel = "Preview menu"
-        let refresh = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refresh))
-        let close = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(close))
-        toolbar.items = consoleOnly || !showTools ? [close, .flexibleSpace(), refresh] : [close, backButton, forwardButton, .flexibleSpace(), refresh, menuButton]
-        let appearance = UIToolbarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = background
-        toolbar.standardAppearance = appearance
-        toolbar.scrollEdgeAppearance = appearance
-        for child in [toolbar, address, content, progress] { child.translatesAutoresizingMaskIntoConstraints = false; view.addSubview(child) }
+        configureToolbar(foreground: foreground)
+        for child in [toolbar, content] { child.translatesAutoresizingMaskIntoConstraints = false; view.addSubview(child) }
         content.addSubview(webView)
         NSLayoutConstraint.activate([
             toolbar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             toolbar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            toolbar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor), toolbar.heightAnchor.constraint(equalToConstant: 44),
-            address.topAnchor.constraint(equalTo: toolbar.bottomAnchor), address.heightAnchor.constraint(equalToConstant: 36),
-            address.leadingAnchor.constraint(equalTo: toolbar.leadingAnchor, constant: 12), address.trailingAnchor.constraint(equalTo: toolbar.trailingAnchor, constant: -12),
-            progress.topAnchor.constraint(equalTo: address.bottomAnchor), progress.leadingAnchor.constraint(equalTo: toolbar.leadingAnchor), progress.trailingAnchor.constraint(equalTo: toolbar.trailingAnchor),
-            content.topAnchor.constraint(equalTo: progress.bottomAnchor), content.leadingAnchor.constraint(equalTo: toolbar.leadingAnchor),
+            toolbar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor), toolbar.heightAnchor.constraint(equalToConstant: 45),
+            content.topAnchor.constraint(equalTo: toolbar.bottomAnchor), content.leadingAnchor.constraint(equalTo: toolbar.leadingAnchor),
             content.trailingAnchor.constraint(equalTo: toolbar.trailingAnchor), content.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
         ])
         observations = [
-            webView.observe(\.estimatedProgress, options: [.initial, .new]) { [weak self] webView, _ in
-                MainActor.assumeIsolated { self?.progress.progress = Float(webView.estimatedProgress); self?.progress.isHidden = webView.estimatedProgress == 1 }
+            webView.observe(\.canGoBack, options: [.new]) { [weak self] _, _ in MainActor.assumeIsolated { self?.updateMenu() } },
+            webView.observe(\.canGoForward, options: [.new]) { [weak self] _, _ in MainActor.assumeIsolated { self?.updateMenu() } },
+            webView.observe(\.title, options: [.new]) { [weak self] view, _ in
+                MainActor.assumeIsolated { self?.updateAddress(); self?.onTitleChanged?(view.title ?? "") }
             },
-            webView.observe(\.canGoBack, options: [.initial, .new]) { [weak self] view, _ in MainActor.assumeIsolated { self?.backButton.isEnabled = view.canGoBack } },
-            webView.observe(\.canGoForward, options: [.initial, .new]) { [weak self] view, _ in MainActor.assumeIsolated { self?.forwardButton.isEnabled = view.canGoForward } },
-            webView.observe(\.title, options: [.new]) { [weak self] view, _ in MainActor.assumeIsolated { self?.onTitleChanged?(view.title ?? "") } },
             webView.observe(\.fullscreenState, options: [.new]) { [weak self] view, _ in
                 MainActor.assumeIsolated { if view.fullscreenState == .notInFullscreen { self?.view.setNeedsLayout() } }
             },

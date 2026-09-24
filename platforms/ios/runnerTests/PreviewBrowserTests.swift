@@ -1,13 +1,45 @@
 import XCTest
 import WebKit
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 @MainActor
 final class PreviewBrowserTests: BridgeTestCase {
+    func testConsoleFocusKeepsScaleAndFitsAboveKeyboard() async throws {
+        let app = try await editorWebView()
+        var responder: UIResponder? = app
+        while responder != nil, !(responder is WebViewController) { responder = responder?.next }
+        let controller = try XCTUnwrap(responder as? WebViewController)
+        _ = try await app.evaluateJavaScript("acode.exec('console')")
+        let browser = try await presentedBrowser(controller)
+        do {
+            try await waitForPage(browser.webView, expression: "Boolean(document.querySelector('#__c-input'))")
+            XCTAssertEqual(browser.address.text, "Console")
+            XCTAssertNil(browser.menuButton.superview)
+            assertCompactHeader(browser, screenshot: "console")
+            let initialHeight = browser.content.bounds.height
+            let result = try await browser.webView.callAsyncJavaScript("""
+                const input=document.querySelector('#__c-input');
+                const initialScale=visualViewport.scale;
+                input.focus();
+                await new Promise(resolve=>setTimeout(resolve,800));
+                return {fontSize:parseFloat(getComputedStyle(input).fontSize),initialScale,
+                    scale:visualViewport.scale,focused:document.activeElement===input};
+                """, arguments: [:], in: nil, contentWorld: .page) as? [String: Any]
+            XCTAssertEqual(result?["focused"] as? Bool, true)
+            XCTAssertGreaterThanOrEqual(try XCTUnwrap(result?["fontSize"] as? Double), 16)
+            XCTAssertEqual(try XCTUnwrap(result?["scale"] as? Double), try XCTUnwrap(result?["initialScale"] as? Double), accuracy: 0.01)
+            XCTAssertLessThan(browser.content.bounds.height, initialHeight, "The software keyboard must actually appear")
+            attachScreenshot(browser, name: "console-keyboard")
+            _ = try await browser.webView.evaluateJavaScript("document.querySelector('#__c-input').blur()")
+            try await Task.sleep(for: .milliseconds(500))
+            XCTAssertEqual(browser.content.bounds.height, initialHeight, accuracy: 1)
+            await withCheckedContinuation { continuation in browser.dismiss(animated: false) { continuation.resume() } }
+        } catch {
+            controller.presentedViewController?.dismiss(animated: false)
+            throw error
+        }
+    }
+
     func testUnsavedEditorFileRunsInIsolatedBrowserWithConsoleAndViewportControls() async throws {
         let app = try await appWebView()
         let port = Int.random(in: 49152...60000)
@@ -27,6 +59,12 @@ final class PreviewBrowserTests: BridgeTestCase {
         do {
             let browser = try await presentedBrowser(controller)
             try await waitForPage(browser.webView, expression: "document.querySelector('h1')?.textContent === 'Unsaved ✓'")
+            XCTAssertEqual(browser.address.text, "Preview fixture")
+            assertCompactHeader(browser, screenshot: "browser")
+            XCTAssertTrue(browser.address.becomeFirstResponder())
+            XCTAssertEqual(browser.address.text, browser.webView.url?.absoluteString)
+            browser.address.resignFirstResponder()
+            XCTAssertEqual(browser.address.text, "Preview fixture")
             let isolated = try await browser.webView.evaluateJavaScript("!window.Bridge && !window.webkit?.messageHandlers?.exec") as? Bool
             XCTAssertEqual(isolated, true)
             try await waitForPage(browser.webView, expression: "Boolean(document.querySelector('c-toggler'))")
@@ -73,7 +111,7 @@ final class PreviewBrowserTests: BridgeTestCase {
         try await cleanup(app, port: port)
     }
 
-    private func presentedBrowser(_ controller: WebViewController) async throws -> PreviewViewController {
+    func presentedBrowser(_ controller: WebViewController) async throws -> PreviewViewController {
         for _ in 0..<100 {
             if let browser = controller.presentedViewController as? PreviewViewController, !browser.isBeingPresented { return browser }
             try await Task.sleep(for: .milliseconds(100))
@@ -81,7 +119,27 @@ final class PreviewBrowserTests: BridgeTestCase {
         throw NSError(domain: "AcodeTests", code: 2, userInfo: [NSLocalizedDescriptionKey: "Preview not presented"])
     }
 
-    private func waitForPage(_ webView: WKWebView, expression: String) async throws {
+    private func assertCompactHeader(_ browser: PreviewViewController, screenshot: String) {
+        browser.view.layoutIfNeeded()
+        XCTAssertEqual(browser.toolbar.bounds.height, 45, accuracy: 0.5)
+        XCTAssertEqual(browser.content.frame.minY, browser.toolbar.frame.maxY, accuracy: 0.5)
+        XCTAssertEqual(browser.address.convert(browser.address.bounds, to: browser.view).midY, browser.toolbar.frame.midY, accuracy: 0.5)
+        for button in browser.toolbar.arrangedSubviews.compactMap({ $0 as? UIButton }) {
+            XCTAssertNotNil(button.image(for: .normal), "Missing icon: \(button.accessibilityLabel ?? "")")
+        }
+        attachScreenshot(browser, name: screenshot)
+    }
+
+    func attachScreenshot(_ browser: PreviewViewController, name: String) {
+        guard let window = browser.view.window else { return }
+        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in window.drawHierarchy(in: window.bounds, afterScreenUpdates: true) }
+        let attachment = XCTAttachment(image: image)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    func waitForPage(_ webView: WKWebView, expression: String) async throws {
         for _ in 0..<100 {
             if (try? await webView.evaluateJavaScript(expression)) as? Bool == true { return }
             try await Task.sleep(for: .milliseconds(100))

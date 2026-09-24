@@ -1,10 +1,6 @@
 import SafariServices
 import XCTest
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 @MainActor
 final class BrowserBridgeTests: BridgeTestCase {

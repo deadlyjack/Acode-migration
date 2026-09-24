@@ -2,7 +2,9 @@ import { file, resolveLocalFileSystemURL } from "../file";
 import { FileEntry } from "../file/entries";
 import NativeFileReader from "../file/FileReader";
 import http from "../http/advanced-http";
+import runtime from "../runtime";
 import system from "../system";
+import Alpine from "./Alpine";
 import Executor from "./Executor";
 
 const Terminal = {
@@ -677,4 +679,6 @@ function formatError(error: unknown) {
 	}
 	return String(error);
 }
-export default Terminal;
+export default runtime.platformId === "ios"
+	? Object.assign(Terminal, Alpine)
+	: Terminal;

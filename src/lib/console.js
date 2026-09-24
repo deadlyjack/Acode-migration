@@ -8,7 +8,6 @@ import ConsoleExecutor, {
 	applyConsoleViewport,
 	executeConsoleCommand,
 	executeConsoleScript,
-	resolveConsoleExecutionContext,
 } from "./consoleRuntime";
 
 (function () {
@@ -71,12 +70,12 @@ import ConsoleExecutor, {
 		},
 		children: [
 			tag("option", {
-				textContent: "Worker",
-				attr: { value: "worker" },
+				textContent: "Page",
+				attr: { value: "page" },
 			}),
 			tag("option", {
-				textContent: "Page (unsafe)",
-				attr: { value: "page" },
+				textContent: "Worker",
+				attr: { value: "worker" },
 			}),
 		],
 		onchange() {
@@ -98,10 +97,7 @@ import ConsoleExecutor, {
 		children: [
 			$input,
 			tag("c-input-actions", {
-				children: [
-					...(isStandaloneConsole ? [] : [$executionContext]),
-					$stopExecution,
-				],
+				children: [$executionContext, $stopExecution],
 			}),
 		],
 	});
@@ -213,7 +209,7 @@ import ConsoleExecutor, {
 	async function runStartupScript() {
 		if (!startupScriptUrl) return;
 
-		setExecutionState(true);
+		setExecutionState(true, "worker");
 		const result = await executeConsoleScript({
 			scriptUrl: startupScriptUrl,
 			workerExecutor: executor,
@@ -452,10 +448,10 @@ import ConsoleExecutor, {
 		$input.focus();
 	}
 
-	function setExecutionState(running) {
+	function setExecutionState(running, context = $executionContext.value) {
 		isExecuting = running;
 		$console.toggleAttribute("running", running);
-		$stopExecution.hidden = !running || $executionContext.value !== "worker";
+		$stopExecution.hidden = !running || context !== "worker";
 		$input.disabled = running;
 		$executionContext.disabled = running;
 	}
@@ -865,10 +861,7 @@ import ConsoleExecutor, {
 
 	function executeCommand(code) {
 		return executeConsoleCommand({
-			context: resolveConsoleExecutionContext(
-				isStandaloneConsole,
-				$executionContext.value,
-			),
+			context: $executionContext.value,
 			code,
 			workerExecutor: executor,
 			pageExecutor: execute,

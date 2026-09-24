@@ -1,9 +1,8 @@
-#if ACODE_FREE
 import GoogleMobileAds
 import UserMessagingPlatform
 import XCTest
 import WebKit
-@testable import runnerFree
+@testable import runner
 
 @MainActor
 final class AdsBridgeTests: BridgeTestCase {
@@ -182,4 +181,3 @@ private final class FixtureAdValue: AdValue {
 private final class OfflineBanner: BannerView {
     override func load(_ request: Request?) {}
 }
-#endif

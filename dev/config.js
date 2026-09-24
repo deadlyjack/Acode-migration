@@ -5,7 +5,8 @@ const ID_FREE = "com.foxdebug.acodefree";
 
 module.exports = { getAppConfig, getWebBundlePath };
 
-function getAppConfig() {
+function getAppConfig(platform = process.env.ACODE_PLATFORM || "android") {
+	if (platform === "ios") return { variant: "free", targetId: "app.acode" };
 	const { name } = JSON.parse(
 		fs.readFileSync(path.resolve(__dirname, "../package.json"), "utf8"),
 	);

@@ -28,7 +28,7 @@ function parseOptions(args) {
 		);
 	}
 	return {
-		...getAppConfig(),
+		...getAppConfig("android"),
 		mode: args.some((arg) => ["p", "prod"].includes(arg)) ? "p" : "d",
 		channel: args.includes("fdroid") ? "fdroid" : "store",
 		bundle: args.includes("bundle"),

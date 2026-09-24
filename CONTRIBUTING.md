@@ -155,7 +155,7 @@ npm run dev:ios
 ```
 
 Like the Proteus template, this prepares the web bundle and opens Xcode. Select
-the `runner` scheme for paid or `runnerFree` for free, select your connected iPhone,
+the `runner` scheme, select your connected iPhone,
 and press **Cmd+R** to build, sign and install. Signing uses your local
 `Config.xcconfig`. `npm start -- ios` also opens Xcode after preparing the bundle.
 `--device` is accepted for this flow; `--target` is reserved for scripted simulator
@@ -237,27 +237,28 @@ retries replace partial content. These tests need the loopback fixture above.
 interrupted FTP/FTPS uploads and downloads in active and passive modes. Its
 fixture closes disposable connections mid-transfer; keep these checks local.
 
-The same `package.json.name` selects the edition: paid maps to `app.acode`, free to
-`app.acode.free`. Override the iOS identifier with `ACODE_IOS_BUNDLE_ID` when needed.
-Version and build number come from `package.json`. Simulator builds use ad-hoc
-signing so Keychain services work without a distribution certificate.
+iOS has one free app: the `runner` target and scheme use bundle ID `app.acode`.
+`package.json.name` selects the Android edition only; iOS always builds the free
+web bundle and native advertising implementation. Version and build number come
+from `package.json`. Simulator builds use ad-hoc signing so Keychain services work
+without a distribution certificate.
 
-The free edition uses the `runnerFree` Xcode target; the paid edition uses `runner`.
-Only `runnerFree` includes `platforms/ios/ads`, the Google Mobile Ads/UMP packages
-and advertising metadata. Debug builds use Google's iOS test units. Free release
-builds require `ACODE_IOS_ADMOB_APP_ID`, `ACODE_IOS_ADMOB_BANNER_ID`,
+The target includes `platforms/ios/ads`, Google Mobile Ads/UMP and advertising
+metadata. Debug builds use Google's iOS test units. Release builds require
+`ACODE_IOS_ADMOB_APP_ID`, `ACODE_IOS_ADMOB_BANNER_ID`,
 `ACODE_IOS_ADMOB_INTERSTITIAL_ID` and `ACODE_IOS_ADMOB_REWARDED_ID`.
 See [iOS advertising](docs/ios-advertising.md) for consent testing, source provenance
-and validation limits. Run the normal script before building `runnerFree` in Xcode;
-it prepares the free target's metadata and the matching web bundle.
+and validation limits. Run the normal script before building `runner` in Xcode;
+it prepares `.ios-build/App-Info.plist` and the matching web bundle.
 
 The icon picker uses UIKit alternate icons and the existing reward/Pro gates.
 `runner.icon` and the fifteen alternate app-icon sets use Acode's existing
 `src/res/icons` artwork, rasterized at 1024 pixels. Keep these checked-in resources
 aligned when changing the artwork; no generation hook runs during builds.
-The paid scheme includes a Settings interaction test that changes and restores
+The scheme includes a Settings interaction test that changes and restores
 the icon, including Apple's confirmation and portrait/landscape rotation on
-iPhone and iPad. Free native tests cover packaged icons
+iPhone and iPad. It uses the local StoreKit Pro fixture to unlock the picker.
+Native tests cover packaged icons
 and the bridge; shared tests cover reward and purchase gates.
 
 The `System` file utilities retain Android's result shapes, newline semantics and
@@ -266,7 +267,7 @@ folders. Reward-pass state uses Keychain. Android file-edit intents and launcher
 shortcuts are hidden on iOS; sharing and opening exported copies remain available.
 `PluginInstallTests` installs the disposable ZIP in `runnerTests/Fixtures` through
 the Plugins source prompt, exercising extraction, script loading, legacy APIs,
-plugin context and cleanup on both editions. The fixture is test-bundle-only.
+plugin context and cleanup. The fixture is test-bundle-only.
 `DocumentsPickerTests` checks picker return values, cancellation and reload
 cleanup; `ShareTests` checks exported copies and share-sheet cleanup. They drive
 the real UIKit controllers through public delegates/completions. Keep native
@@ -484,3 +485,9 @@ Many font editing software and web-based tools exist for this purpose. Some of t
 To create plugins for Acode:
 - [Plugin Starter Repository](https://github.com/Acode-Foundation/acode-plugin)
 - [Plugin Documentation](https://docs.acode.app/)
+
+### iOS Alpine terminal
+
+Install `brew install meson ninja llvm lld` on an Apple Silicon Mac before building iOS. The normal scripts and direct Xcode builds compile the vendored runtime automatically. `Config.xcconfig` remains limited to ignored local signing information. See [Alpine runtime documentation](platforms/ios/Alpine/README.md) for source revisions, local adaptations, licensing, filesystem layout, and compatibility limits.
+
+The `AlpineTerminalTests`, `AlpineInteractionTests`, `AlpinePackageTests`, and `AlpineLspTests` suites exercise the real WebView bridge, installation, filesystem editing, backup/restore, interactive tabs, Node/npm, and the existing JSON language server. Installation and package tests require access to Alpine and npm repositories. Run them on a dedicated simulator because they install packages and restore its terminal filesystem. Keep physical-device performance and background validation separate from simulator results.

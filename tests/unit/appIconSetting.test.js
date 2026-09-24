@@ -546,7 +546,7 @@ it.each([
 	}
 	await pending;
 	vi.runAllTimers();
-	const loaderCount = outcome === "back" || outcome === "cancel" ? 0 : 1;
+	const loaderCount = ["back", "cancel", "purchase"].includes(outcome) ? 0 : 1;
 	expect(h.loader.create).toHaveBeenCalledTimes(loaderCount);
 	expect(h.loader.destroy).toHaveBeenCalledTimes(loaderCount);
 	expect(actionStack.length).toBe(1);
@@ -568,19 +568,20 @@ it.each([
 	expect(mocks.settings.value.appIcon).toBe("pixel_party");
 });
 
-it("leaves the external Pro flow's loader under its own control", async () => {
-	mocks.external = true;
+it.each([false, true])("leaves the Pro flow's loader under its own control with external checkout %s", async (external) => {
+	mocks.external = external;
 	const h = dialogHarness();
+	const title = external ? "Login" : "Remove ads";
 	mocks.purchase.mockImplementation(async () => {
-		h.loader.create("Login", "Loading...");
+		h.loader.create(title, "Loading...");
 	});
 	const pending = h.click("pro");
 	confirmSelection();
 	await pending;
-	expect(h.loader.create).toHaveBeenCalledExactlyOnceWith("Login", "Loading...");
+	expect(h.loader.create).toHaveBeenCalledExactlyOnceWith(title, "Loading...");
 	expect(h.loader.destroy).not.toHaveBeenCalled();
 	expect(h.dialog.inert).toBe(false);
-	expect(document.querySelector("#__loader .title").textContent.trim()).toBe("Login");
+	expect(document.querySelector("#__loader .title").textContent.trim()).toBe(title);
 	h.loader.destroy();
 	vi.runAllTimers();
 	await actionStack.pop();

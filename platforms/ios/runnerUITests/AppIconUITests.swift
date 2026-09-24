@@ -1,9 +1,17 @@
 import XCTest
+import StoreKitTest
 
 @MainActor
 final class AppIconUITests: XCTestCase {
-    func testChangeAndRestoreIconThroughSettings() throws {
+    func testChangeAndRestoreIconThroughSettings() async throws {
         continueAfterFailure = false
+        let configuration = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "Iap", withExtension: "storekit"))
+        let purchases = try SKTestSession(contentsOf: configuration)
+        purchases.resetToDefaultState()
+        purchases.clearTransactions()
+        purchases.disableDialogs = true
+        defer { purchases.clearTransactions(); purchases.resetToDefaultState() }
+        _ = try await purchases.buyProduct(identifier: "acode_pro_new")
         let device = XCUIDevice.shared
         let originalOrientation = device.orientation
         defer { device.orientation = originalOrientation }
@@ -30,7 +38,7 @@ final class AppIconUITests: XCTestCase {
                 let frame = app.windows.firstMatch.frame
                 return frame.width > 0 && (frame.width > frame.height) == landscape
             }, object: nil)
-            XCTAssertEqual(XCTWaiter.wait(for: [rotated], timeout: 5), .completed)
+            await fulfillment(of: [rotated], timeout: 5)
             XCTAssertTrue(entry.waitForExistence(timeout: 5), app.debugDescription)
             scrollTo(entry, in: app)
             tapWhenReady(entry)

@@ -24,7 +24,6 @@ extension PreviewViewController {
     }
 
     func updateMenu() {
-        guard menuButton != nil else { return }
         var actions: [UIMenuElement] = [
             UIAction(title: "Devices", image: UIImage(systemName: "display"), state: viewport == nil ? .off : .on) { [weak self] _ in self?.showDevices() },
             UIAction(title: "Disable Cache", image: UIImage(systemName: "arrow.triangle.2.circlepath"), state: disableCache ? .on : .off) { [weak self] _ in
@@ -42,6 +41,10 @@ extension PreviewViewController {
             else { UIApplication.shared.open(url) { [weak self] opened in if opened { self?.close() } } }
         })
         actions.append(UIAction(title: "Exit", image: UIImage(systemName: "xmark")) { [weak self] _ in self?.close() })
+        actions.append(UIMenu(options: .displayInline, children: [
+            UIAction(title: "Back", image: UIImage(systemName: "chevron.left"), attributes: webView.canGoBack || consoleVisible ? [] : .disabled) { [weak self] _ in self?.goBack() },
+            UIAction(title: "Forward", image: UIImage(systemName: "chevron.right"), attributes: webView.canGoForward ? [] : .disabled) { [weak self] _ in self?.goForward() },
+        ]))
         menuButton.menu = UIMenu(children: actions)
     }
 

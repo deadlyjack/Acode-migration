@@ -95,16 +95,14 @@ describe("icon selection", () => {
 		mocks.pass = true;
 		const h = harness();
 		mocks.purchase.mockImplementation(async () => {
-			expect(h.onLoading.mock.calls).toEqual(external ? [] : [[true]]);
+			expect(h.onLoading).not.toHaveBeenCalled();
 			mocks.config.HAS_PRO = true;
 		});
 		await h.select("pro");
 		expect(mocks.purchase).toHaveBeenCalledOnce();
 		expect(mocks.reward).not.toHaveBeenCalled();
 		expect(system.setAppIcon).not.toHaveBeenCalled();
-		expect(h.onLoading.mock.calls).toEqual(
-			external ? [[false]] : [[true], [false]],
-		);
+		expect(h.onLoading.mock.calls).toEqual([[false]]);
 		await h.select("pro");
 		expect(system.setAppIcon).toHaveBeenCalledWith(
 			"pro",

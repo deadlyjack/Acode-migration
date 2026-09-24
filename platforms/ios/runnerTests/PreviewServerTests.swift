@@ -1,10 +1,6 @@
 import XCTest
 import WebKit
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 final class LocalHTTPParserTests: XCTestCase {
     func testFragmentedUnicodeAndBinaryBodies() throws {

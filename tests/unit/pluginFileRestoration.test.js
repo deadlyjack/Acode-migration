@@ -67,6 +67,7 @@ function setup() {
 		"lib/ajax": { get: remote.readFile },
 		"utils/encodings": { decode: (value) => value },
 		"utils/Url": url,
+		"./alpine": { test: () => false, createFs: localFs },
 		"./internalFs": {
 			test: (uri) => uri.startsWith("file:"),
 			createFs: localFs,

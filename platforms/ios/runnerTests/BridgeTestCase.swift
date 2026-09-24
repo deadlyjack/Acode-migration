@@ -4,7 +4,6 @@ import WebKit
 @MainActor
 class BridgeTestCase: XCTestCase {
     override func setUp() async throws {
-        #if ACODE_FREE
         let webView = try await appWebView()
         let marker = "iosConsentFixture"
         let scripts = webView.configuration.userContentController
@@ -22,7 +21,6 @@ class BridgeTestCase: XCTestCase {
         webView.reload()
         try await Task.sleep(for: .milliseconds(200))
         _ = try await appWebView()
-        #endif
     }
 
     func appWebView() async throws -> WKWebView {

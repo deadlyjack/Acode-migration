@@ -68,12 +68,10 @@ final class WebViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(appCameToForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
     }
 
-    #if ACODE_FREE
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         bridge.adsService?.banners.layout()
     }
-    #endif
 
     func setContentInsets(top: CGFloat, bottom: CGFloat) {
         guard contentTop.constant != top || contentBottom.constant != -bottom else { return }

@@ -207,19 +207,23 @@ async function onDeviceReady() {
 			window.log("error", e);
 		});
 
-		if (localStorage.acode_pro === "true") {
+		// StoreKit verifies cached entitlements even when the device is offline.
+		if (!platform.isIOS && localStorage.acode_pro === "true") {
 			config.HAS_PRO = true;
 		}
 
-		if (navigator.onLine) {
+		if (platform.isIOS || navigator.onLine) {
 			const purchases = await helpers.promisify(iap.getPurchases);
-			const isPro = purchases.find((p) =>
-				p.productIds.includes("acode_pro_new"),
+			const isPro = purchases.some(
+				(purchase) =>
+					purchase.purchaseState === iap.PURCHASE_STATE_PURCHASED &&
+					purchase.productIds.includes("acode_pro_new"),
 			);
 			if (isPro) {
 				config.HAS_PRO = true;
 			} else {
 				config.HAS_PRO = !isFreePackage;
+				localStorage.removeItem("acode_pro");
 			}
 		}
 	} catch (error) {

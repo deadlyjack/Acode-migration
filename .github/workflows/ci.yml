@@ -108,19 +108,11 @@ jobs:
             npm run lang check
 
   ios:
-    name: Acode iOS (${{ matrix.edition }})
+    name: Acode iOS
     runs-on: macos-26
     timeout-minutes: 30
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - edition: paid
-            package: com.foxdebug.acode
-          - edition: free
-            package: com.foxdebug.acodefree
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -131,8 +123,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-      - name: Select package
-        run: npm pkg set name=${{ matrix.package }}
+      - name: Install Alpine runtime build tools
+        run: brew install meson ninja llvm lld
       - name: Prepare local iOS configuration
         run: cp platforms/ios/Config.xcconfig.example platforms/ios/Config.xcconfig
       - name: Select iPhone and iPad simulators with working StoreKit testing
@@ -160,15 +152,12 @@ jobs:
           .ios-build/ssh-fixture-venv/bin/python tests/fixtures/ssh/server.py -- npm run test:ios -- --target=${{ steps.simulator.outputs.id }}
       - name: Run iPad startup and native UI checks
         run: |
-          scheme=$(node -p 'require("./package.json").name === "com.foxdebug.acodefree" ? "runnerFree" : "runner"')
           checks=()
           for test in AppBridgeTests SystemUITests KeyboardLayoutTests PlatformUITests HapticControlsTests DocumentsPickerTests ShareTests PreviewBrowserTests FilesBrowserTests BrowserBridgeTests; do
-            checks+=("-only-testing:${scheme}Tests/$test")
+            checks+=("-only-testing:runnerTests/$test")
           done
-          if [ "$scheme" = runner ]; then
-            checks+=("-only-testing:runnerUITests/AppIconUITests")
-          fi
-          xcodebuild -project platforms/ios/runner.xcodeproj -scheme "$scheme" \
+          checks+=("-only-testing:runnerUITests/AppIconUITests")
+          xcodebuild -project platforms/ios/runner.xcodeproj -scheme runner \
             -configuration Debug -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.ipad }}' \
             -derivedDataPath .ios-build -clonedSourcePackagesDirPath .ios-build/SourcePackages \

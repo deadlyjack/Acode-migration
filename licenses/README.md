@@ -12,3 +12,5 @@ registration with the app-owned bridge. Java packages and classes have been
 renamed to match their current source locations.
 
 The HTTP MIT license is preserved from the [upstream license](https://github.com/silkimen/cordova-plugin-advanced-http/blob/master/LICENSE).
+
+The iOS Alpine runtime has separate GPL licensing and retained upstream sources. See [the runtime provenance](../platforms/ios/Alpine/README.md) and its GPL and libarchive license texts.

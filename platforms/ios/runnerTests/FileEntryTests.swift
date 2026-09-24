@@ -1,10 +1,6 @@
 import XCTest
 import WebKit
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 @MainActor
 final class FileEntryTests: BridgeTestCase {

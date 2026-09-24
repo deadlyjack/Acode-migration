@@ -2,11 +2,7 @@ import XCTest
 import StoreKit
 import StoreKitTest
 import WebKit
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 @MainActor
 final class IapBridgeTests: BridgeTestCase {
@@ -59,7 +55,7 @@ final class IapBridgeTests: BridgeTestCase {
                     }
                     await new Promise(resolve=>setTimeout(resolve,50));
                 }
-                return false;
+                throw Error('Restore UI did not finish: '+JSON.stringify({toast:document.querySelector('#toast .message')?.textContent,dialogs:[...document.querySelectorAll('.prompt:not(.hide)')].map(el=>el.textContent),cached:localStorage.getItem('acode_pro')}));
             } finally {page.hide();if(saved===null)localStorage.removeItem('acode_pro');else localStorage.setItem('acode_pro',saved);}
             """, arguments: [:], in: nil, contentWorld: .page) as? Bool
         XCTAssertEqual(settingsRestored, true)

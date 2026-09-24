@@ -28,7 +28,7 @@ function prepareAds(mode) {
 			? productionId("ACODE_IOS_ADMOB_APP_ID", "~")
 			: process.env.ACODE_IOS_ADMOB_APP_ID || `${testPublisher}~1458002511`;
 	adUnits(mode);
-	const file = path.join(root, ".ios-build/Free-Info.plist");
+	const file = path.join(root, ".ios-build/App-Info.plist");
 	fs.mkdirSync(path.dirname(file), { recursive: true });
 	execFileSync("plutil", [
 		"-convert",

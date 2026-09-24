@@ -1,3 +1,4 @@
+ALPINE_ROOT=${ALPINE_ROOT:-$PREFIX/alpine}
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/share/bin:/usr/share/sbin:/usr/local/bin:/usr/local/sbin:/system/bin:/system/xbin:$PREFIX/local/bin
 export PS1="\[\e[38;5;46m\]\u\[\033[39m\]@localhost \[\033[39m\]\w \[\033[0m\]\\$ "
 export HOME=/public
@@ -85,8 +86,8 @@ fi
     echo "$$" > "$PREFIX/pid"
     chmod +x "$PREFIX/axs"
 
-    if [ ! -e "$PREFIX/alpine/etc/acode_motd" ]; then
-        cat <<EOF > "$PREFIX/alpine/etc/acode_motd"
+    if [ ! -e "$ALPINE_ROOT/etc/acode_motd" ]; then
+        cat <<EOF > "$ALPINE_ROOT/etc/acode_motd"
 Welcome to Alpine Linux in Acode!
 
 Working with packages:
@@ -100,9 +101,9 @@ EOF
     fi
 
     # Create acode CLI tool
-    if [ ! -e "$PREFIX/alpine/usr/local/bin/acode" ]; then
-        mkdir -p "$PREFIX/alpine/usr/local/bin"
-        cat <<'ACODE_CLI' > "$PREFIX/alpine/usr/local/bin/acode"
+    if [ ! -e "$ALPINE_ROOT/usr/local/bin/acode" ]; then
+        mkdir -p "$ALPINE_ROOT/usr/local/bin"
+        cat <<'ACODE_CLI' > "$ALPINE_ROOT/usr/local/bin/acode"
 #!/bin/bash
 # acode - Open files/folders in Acode editor
 # Uses OSC escape sequences to communicate with the Acode terminal
@@ -177,13 +178,13 @@ for arg in "$@"; do
     esac
 done
 ACODE_CLI
-        chmod +x "$PREFIX/alpine/usr/local/bin/acode"
+        chmod +x "$ALPINE_ROOT/usr/local/bin/acode"
     fi
 
     # Create initrc if it doesn't exist
     #initrc runs in bash so we can use bash features
-if [ ! -e "$PREFIX/alpine/initrc" ]; then
-    cat <<'EOF' > "$PREFIX/alpine/initrc"
+if [ ! -e "$ALPINE_ROOT/initrc" ]; then
+    cat <<'EOF' > "$ALPINE_ROOT/initrc"
 # Source rc files if they exist
 
 if [ -f "/etc/profile" ]; then
@@ -341,15 +342,15 @@ EOF
 fi
 
 # Add PS1 only if not already present
-if ! grep -q 'PS1=' "$PREFIX/alpine/initrc"; then
+if ! grep -q 'PS1=' "$ALPINE_ROOT/initrc"; then
     # Smart path shortening (fish-style: ~/p/s/components)
-    echo 'PS1="\[\033[1;32m\]\u\[\033[0m\]@localhost \[\033[1;34m\]\$_PS1_PATH\[\033[0m\] \[\$([ \$_PS1_EXIT -ne 0 ] && echo \"\033[31m\")\]\$\[\033[0m\] "' >> "$PREFIX/alpine/initrc"
+    echo 'PS1="\[\033[1;32m\]\u\[\033[0m\]@localhost \[\033[1;34m\]\$_PS1_PATH\[\033[0m\] \[\$([ \$_PS1_EXIT -ne 0 ] && echo \"\033[31m\")\]\$\[\033[0m\] "' >> "$ALPINE_ROOT/initrc"
     # Simple prompt (uncomment below and comment above if you prefer full paths)
-    # echo 'PS1="\[\033[1;32m\]\u\[\033[0m\]@localhost \[\033[1;34m\]\w\[\033[0m\] \$ "' >> "$PREFIX/alpine/initrc"
+    # echo 'PS1="\[\033[1;32m\]\u\[\033[0m\]@localhost \[\033[1;34m\]\w\[\033[0m\] \$ "' >> "$ALPINE_ROOT/initrc"
 fi
 
 
-chmod +x "$PREFIX/alpine/initrc"
+chmod +x "$ALPINE_ROOT/initrc"
 
 if [ "$FAILSAFE" != true ]; then
     #everytime a terminal is started initrc will run

@@ -35,8 +35,6 @@ export default async function selectAppIcon(
 			if (!proceed || signal.aborted) return;
 		}
 		if (icon.requiresPro && !config.HAS_PRO) {
-			// External checkout manages its own login loader and confirmation.
-			if (!helpers.shouldAllowExternalPurchase()) onLoading(true);
 			await requestProPurchase({ signal });
 			return;
 		}

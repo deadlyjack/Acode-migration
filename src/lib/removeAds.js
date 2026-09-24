@@ -1,4 +1,4 @@
-import toast from "components/toast";
+import alert from "dialogs/alert";
 import confirm from "dialogs/confirm";
 import loader from "dialogs/loader";
 import purchaseListener from "handlers/purchase";
@@ -20,6 +20,7 @@ function enablePro() {
 export default function removeAds({ signal } = {}) {
 	if (signal?.aborted) return Promise.reject(strings.canceled);
 	if (activePurchase) return activePurchase;
+	loader.create(strings["remove ads"], strings["loading..."]);
 	activePurchase = new Promise((resolve, reject) => {
 		let settled = false;
 		let launched = false;
@@ -46,7 +47,7 @@ export default function removeAds({ signal } = {}) {
 			} catch (error) {
 				console.warn("Unable to cache Pro purchase", error);
 			}
-			toast(strings["thank you :)"]);
+			alert(strings.success, strings["thank you :)"]);
 			resolve();
 		}
 		signal?.addEventListener("abort", cancel, { once: true });
@@ -75,6 +76,7 @@ export default function removeAds({ signal } = {}) {
 			fail(error);
 		}
 	}).finally(() => {
+		loader.destroy();
 		activePurchase = null;
 	});
 	return activePurchase;

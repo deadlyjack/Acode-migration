@@ -398,7 +398,7 @@ export default function terminalSettings() {
 	 */
 	async function terminalRestore() {
 		try {
-			await Executor.execute("rm -rf $PREFIX/aterm_backup.*");
+			await clearBackup();
 
 			sdcard.openDocumentFile(
 				async (data) => {
@@ -416,7 +416,7 @@ export default function terminalSettings() {
 					await Terminal.restore();
 
 					//Cleanup restore file
-					await Executor.execute("rm -rf $PREFIX/aterm_backup.*");
+					await clearBackup();
 
 					loader.removeTitleLoader();
 					alert(
@@ -433,6 +433,12 @@ export default function terminalSettings() {
 			toast(error.toString());
 		}
 	}
+}
+
+function clearBackup() {
+	return platform.isIOS
+		? Terminal.clearBackup()
+		: Executor.execute("rm -rf $PREFIX/aterm_backup.*");
 }
 
 /**

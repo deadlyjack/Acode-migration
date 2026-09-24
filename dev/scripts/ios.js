@@ -23,9 +23,7 @@ if (require.main === module) {
 
 function parseOptions(args) {
 	if (args.some((arg) => /^(free|paid|fdroid|apk|bundle)$/i.test(arg))) {
-		throw new Error(
-			"For iOS, choose the edition with package.json; use ios dev or ios prod.",
-		);
+		throw new Error("iOS has one free edition; use ios dev or ios prod.");
 	}
 	if (
 		args.includes("--device") &&
@@ -35,7 +33,7 @@ function parseOptions(args) {
 			"For an iPhone, omit --target and select the device in Xcode.",
 		);
 	return {
-		...getAppConfig(),
+		...getAppConfig("ios"),
 		mode: args.some((arg) => ["p", "prod"].includes(arg)) ? "Release" : "Debug",
 		action: args.includes("test") ? "test" : "build",
 		skipWeb: args.includes("--skip-web"),
@@ -61,7 +59,7 @@ function prepare(options) {
 			{ ACODE_PLATFORM: "ios", ACODE_FDROID: "false" },
 		);
 	}
-	if (options.variant === "free") prepareAds(options.mode);
+	prepareAds(options.mode);
 }
 
 function build(options) {
@@ -72,12 +70,11 @@ function build(options) {
 		fs.readFileSync(path.join(root, "package.json"), "utf8"),
 	);
 	const sdk = options.device ? "iphoneos" : "iphonesimulator";
-	const scheme = options.variant === "free" ? "runnerFree" : "runner";
 	run("xcodebuild", [
 		"-project",
 		"platforms/ios/runner.xcodeproj",
 		"-scheme",
-		scheme,
+		"runner",
 		"-configuration",
 		options.mode,
 		"-sdk",
@@ -94,7 +91,6 @@ function build(options) {
 		".ios-build/SourcePackages",
 		`MARKETING_VERSION=${pkg.version}`,
 		`CURRENT_PROJECT_VERSION=${pkg.versionCode}`,
-		`PRODUCT_BUNDLE_IDENTIFIER=${bundleId(options)}`,
 		...(options.device
 			? ["CODE_SIGNING_ALLOWED=NO"]
 			: ["CODE_SIGNING_ALLOWED=YES", "CODE_SIGN_IDENTITY=-"]),
@@ -112,7 +108,7 @@ function build(options) {
 		root,
 		".ios-build/Build/Products",
 		`${options.mode}-${sdk}`,
-		`${scheme}.app`,
+		"runner.app",
 	);
 	console.log(`${options.action === "test" ? "Tested" : "Built"} ${artifact}`);
 	return artifact;
@@ -121,9 +117,8 @@ function build(options) {
 function launch(options, artifact) {
 	if (options.device || !options.target) {
 		run("open", [path.join(root, "platforms/ios/runner.xcodeproj")]);
-		const scheme = options.variant === "free" ? "runnerFree" : "runner";
 		console.log(
-			`In Xcode, select the ${scheme} scheme and your iPhone, then press Cmd+R to build and install.`,
+			"In Xcode, select the runner scheme and your iPhone, then press Cmd+R to build and install.",
 		);
 		if (options.mode === "Release")
 			console.log("Set the scheme's Run build configuration to Release.");
@@ -147,18 +142,11 @@ function launch(options, artifact) {
 		);
 	if (device.state !== "Booted") run("xcrun", ["simctl", "boot", target]);
 	run("xcrun", ["simctl", "bootstatus", target, "-b"]);
-	spawnSync("xcrun", ["simctl", "terminate", target, bundleId(options)], {
+	spawnSync("xcrun", ["simctl", "terminate", target, options.targetId], {
 		stdio: "ignore",
 	});
 	run("xcrun", ["simctl", "install", target, artifact]);
-	run("xcrun", ["simctl", "launch", target, bundleId(options)]);
-}
-
-function bundleId(options) {
-	return (
-		process.env.ACODE_IOS_BUNDLE_ID ||
-		(options.variant === "free" ? "app.acode.free" : "app.acode")
-	);
+	run("xcrun", ["simctl", "launch", target, options.targetId]);
 }
 
 function run(command, args, env = {}, capture = false) {

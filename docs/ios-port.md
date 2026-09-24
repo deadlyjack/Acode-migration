@@ -1,5 +1,15 @@
 # iOS port tracking
 
+## Current iOS app identity
+
+iOS now has one free app: bundle ID `app.acode`, Xcode target/scheme `runner`,
+and test target `runnerTests`. Both native code and the web bundle include the
+free advertising implementation regardless of Android's package-name selection.
+Build commands and configuration are in [CONTRIBUTING.md](../CONTRIBUTING.md).
+The validation history below includes runs made before this consolidation;
+references to separate paid/free builds describe those earlier runs.
+
+
 The iOS port aims to preserve Acode's editor and public native/plugin APIs.
 Android remains supported. This checklist records unfinished work; a successful build alone does
 not establish feature parity.
@@ -28,25 +38,19 @@ the configured account and advertising services.
 - [ ] iOS capability checks in menus, settings, commands and runtime providers
 - [ ] Regression tests, simulator smoke tests, CI and contributor documentation
 
-Suppress Android-only facilities on iOS: the existing local terminal/proot/executable
-backend, local native language-server installation, Android intents/package launching, APK
-updates, all-files access permissions, Android battery controls and programmatic
-app exit. Keep browser-based and remote language servers and remote shells.
+Android intents/package launching, APK updates, all-files access permissions,
+Android battery controls and programmatic app exit remain platform exclusions.
+Local terminals and native language-server processes use the ARM64 Alpine
+runtime described in [platforms/ios/Alpine/README.md](../platforms/ios/Alpine/README.md).
+It preserves Acode's terminal UI, AXS protocol and shell initialization script;
+Linux package compatibility is bounded by the emulator, Node JIT restrictions,
+and iOS process lifetime. Browser-based and remote language servers remain available.
 
-A local iOS terminal is feasible: [a-Shell](https://github.com/holzschu/a-shell)
-uses [ios_system](https://github.com/holzschu/ios_system) for ported commands and
-WebAssembly for additional tools. Acode could retain its xterm interface and add
-an iOS native backend for command sessions, input/output, cancellation and terminal
-size, using the existing Files grants for working directories. This is separate
-from Android's Alpine/proot backend and arbitrary native-process execution.
-`ios_system` is not integrated yet; the current `localExecution` gate describes
-the available backend, not an inherent inability to provide an iOS terminal.
-
-The native registration audit matches 20 of Android's 23 services to iOS services.
-The exclusions are `Executor`, `BackgroundExecutor` and `CrashHandler`; the last
+The native registration audit matches 22 of Android's 23 services to iOS services.
+`Executor` and `BackgroundExecutor` now execute inside Alpine. `CrashHandler`
 only installs Android's uncaught-exception handler and starts its crash activity,
-with no public bridge actions. Local-execution, launcher-shortcut, package-launch
-and storage-manager controls are gated in commands, menus and settings. Of the
+with no public bridge actions. Launcher-shortcut, package-launch and
+storage-manager controls remain gated in commands, menus and settings. Of the
 54 Android `System` dispatch actions, the eight absent from the iOS service and
 JavaScript proxy are the four launcher-shortcut actions, `launch-app`,
 `getNativeLibraryPath`, `setExec` and `requestStorageManager`. These are deliberate
@@ -199,7 +203,7 @@ flags; 19 affected native checks pass per edition, with the final six startup/ed
 checks also verifying directory type errors. Incoming share tabs retain Android's
 temporary-session behavior. Other share destinations, third-party providers,
 iCloud and physical-device grants remain unverified. The file browser omits
-Terminal Public and unavailable Android storage roots on iOS. Acode's Documents
+unavailable Android storage roots on iOS. Terminal Public is shared with Alpine. Acode's Documents
 folder opens directly; a simulator test browses it and reads a selected file
 through the shared filesystem API.
 
@@ -276,7 +280,7 @@ Dependency revisions are recorded in Xcode's `Package.resolved`; third-party
 license notices ship in `runner/SSH-Licenses.txt` and `runner/FTP-Licenses.txt`.
 Curl source provenance and build configuration are documented in
 `Packages/CCurl/README.md`. The contributor guide describes the optional local
-remote-server fixtures, which CI starts for both editions.
+remote-server fixtures, which CI starts for the iOS test suite.
 
 The preview tests exercise an unsaved editor file through the existing JavaScript
 request handler, console events, responsive viewport sizing, parallel binary
@@ -426,10 +430,10 @@ startup, safe areas, editor/file operations, Files browsing, document-picker
 contracts, share-sheet cleanup, Safari, preview/console/viewport controls, input
 attributes, fullscreen policy, iOS navigation and quick-tools touch/click saving.
 The file-menu fixture waits for loading and dismissal overlays to finish before
-the next interaction. CI includes the expanded native set for both editions.
+the next interaction. CI includes the expanded native set for the unified iOS app.
 The earlier paid Settings touch test also changes and
 restores the app icon while rotating between portrait and landscape. CI runs
-these focused checks after each edition's iPhone suite, reusing its existing build.
+these focused checks after the iPhone suite, reusing its existing build.
 The paid edition passed the earlier 15 native checks and rotation/icon interaction
 test on a separate iPadOS 26.5 simulator as well.
 

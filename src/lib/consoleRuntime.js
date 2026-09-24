@@ -164,19 +164,12 @@ export function applyConsoleViewport(element, windowObject = window) {
 	element.style.setProperty("--console-viewport-left", `${left}px`);
 }
 
-export function resolveConsoleExecutionContext(
-	isStandaloneConsole,
-	selectedContext,
-) {
-	return isStandaloneConsole ? "worker" : selectedContext;
-}
-
 /**
  * Routes a console command to the isolated worker or the live preview page.
- * Page execution is deliberately opt-in because it runs on the preview thread.
+ * Page execution keeps browser objects inspectable; workers isolate scripts.
  */
 export function executeConsoleCommand({
-	context,
+	context = "page",
 	code,
 	workerExecutor,
 	pageExecutor,

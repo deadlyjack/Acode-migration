@@ -37,16 +37,15 @@ final class Bridge: NSObject, WKScriptMessageHandler {
             "Sftp":            SFTPService(bridge: self),
             "Ftp":             FTPService(bridge: self),
             "Iap":             IapService(bridge: self),
+            "Alpine":          AlpineService(bridge: self),
+            "Executor":        ExecutorService(bridge: self),
+            "BackgroundExecutor": BackgroundExecutorService(bridge: self),
+            "AdMob":           AMBPlugin(bridge: self),
         ]
-        #if ACODE_FREE
-        services["AdMob"] = AMBPlugin(bridge: self)
-        #endif
         serviceQueues = services.mapValues { _ in DispatchQueue(label: "app.acode.service." + UUID().uuidString, qos: .userInitiated) }
     }
 
-    #if ACODE_FREE
     var adsService: AMBPlugin? { services["AdMob"] as? AMBPlugin }
-    #endif
 
     // Called on the main thread by WKWebView.
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {

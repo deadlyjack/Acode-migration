@@ -12,11 +12,7 @@ final class BuildInfoService: BaseService {
         #else
         let debug = false
         #endif
-        #if ACODE_FREE
         let flavor = "free"
-        #else
-        let flavor = "paid"
-        #endif
         callback.success(["packageName": id, "basePackageName": "app.acode", "displayName": name, "name": name,
                           "version": info["CFBundleShortVersionString"] as? String ?? "", "versionCode": Int(info["CFBundleVersion"] as? String ?? "0") ?? 0,
                           "debug": debug, "buildType": debug ? "debug" : "release", "flavor": flavor])

@@ -19,12 +19,12 @@ test.each([{ args: [] }, { args: ["--device"] }])("iOS run $args opens Xcode wit
 	expect(result.log.mock.calls.flat().join("\n")).toContain("Xcode");
 });
 
-test("free iPhone development prepares advertising metadata before opening Xcode", () => {
-	const result = runScript(["run", "--device", "--skip-web"], "free");
+test("iPhone development always prepares advertising metadata before opening Xcode", () => {
+	const result = runScript(["run", "--device", "--skip-web"]);
 	expect(result.process.exitCode).toBeUndefined();
 	expect(result.prepareAds).toHaveBeenCalledWith("Debug");
 	expect(result.spawn.mock.calls.map(([command]) => command)).toEqual(["open"]);
-	expect(result.log.mock.calls.flat().join("\n")).toContain("runnerFree");
+	expect(result.log.mock.calls.flat().join("\n")).toContain("runner scheme");
 });
 
 test("an explicit simulator target still builds, boots, installs and launches", () => {
@@ -57,7 +57,7 @@ test("a simulator selector cannot silently override physical-device mode", () =>
 	expect(result.error.mock.calls.flat().join("\n")).toMatch(/select.*Xcode/i);
 });
 
-function runScript(args, variant = "paid") {
+function runScript(args) {
 	const spawn = vi.fn(() => ({ status: 0, stdout: "", stderr: "" }));
 	spawn.mockImplementation((command, args) => ({
 		status: 0,
@@ -76,7 +76,7 @@ function runScript(args, variant = "paid") {
 	};
 	const scriptRequire = (name) => {
 		if (name === "node:child_process") return { spawnSync: spawn };
-		if (name === "../config") return { getAppConfig: () => ({ variant }) };
+		if (name === "../config") return { getAppConfig: () => ({ variant: "free", targetId: "app.acode" }) };
 		if (name === "./iosAds") return { prepareAds };
 		return require(name);
 	};

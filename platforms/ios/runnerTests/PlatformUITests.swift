@@ -1,13 +1,44 @@
 import XCTest
 import WebKit
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 @MainActor
 final class PlatformUITests: BridgeTestCase {
+    func testCoveredEditorReturnsWithItsDocumentAndScrollPosition() async throws {
+        let webView = try await editorWebView()
+        let result = try await webView.callAsyncJavaScript("""
+            const wait=async (label,check)=>{for(let n=0;n<100;n++){if(check())return;await new Promise(r=>setTimeout(r,50));}throw Error('Editor page did not settle: '+label);};
+            const text=Array.from({length:300},(line,index)=>'Page navigation fixture '+index).join('\\n');
+            const previous=editorManager.activeFile;
+            const file=new (acode.require('EditorFile'))('page-navigation-fixture.txt',{text,isUnsaved:false});
+            const page=acode.require('page')('Navigation fixture');
+            try {
+                file.makeActive();
+                await new Promise(resolve=>setTimeout(resolve,1000));
+                const view=editorManager.editor,dom=view.dom,scroller=view.scrollDOM;
+                scroller.scrollTop=300;
+                await wait('initial scroll',()=>scroller.scrollTop>0);
+                const scrollTop=scroller.scrollTop;
+                document.body.append(page);
+                await wait('root detached',()=>!root.isConnected);
+                if(document.querySelectorAll('wc-page').length!==1)throw Error('Covered editor remains mounted');
+                if(!root.handler.$replacement.isConnected)throw Error('Editor lost its placeholder');
+                page.hide();
+                await wait('root restored',()=>root.isConnected&&!page.isConnected);
+                await wait('scroll position restored',()=>scroller.scrollTop===scrollTop);
+                if(editorManager.editor!==view||view.dom!==dom||!dom.isConnected)throw Error('Editor was rebuilt');
+                if(view.state.doc.toString()!==text)throw Error('Editor contents changed');
+                if(document.querySelectorAll('.page-replacement').length)throw Error('Page placeholder leaked');
+                return true;
+            } finally {
+                page.hide();
+                await file.remove(true);
+                previous?.makeActive();
+            }
+            """, arguments: [:], in: nil, contentWorld: .page) as? Bool
+        XCTAssertEqual(result, true)
+    }
+
     func testEmptyNavigationDoesNotOfferToExitButStillClosesDialogs() async throws {
         let webView = try await editorWebView()
         let result = try await webView.callAsyncJavaScript("""
@@ -70,8 +101,15 @@ final class PlatformUITests: BridgeTestCase {
                 const pro=document.querySelector('.main-settings-page [data-key="removeads"]');
                 if(pro&&(pro.textContent.includes(strings['iap-pro-purchase-warning'])||!pro.textContent.includes('Apple Account')))throw Error('Pro restoration instructions target the wrong store');
                 rating?.click();
+                const settingsElement=document.querySelector('.main-settings-page');
+                const body=settingsPage.getListElement();
+                body.scrollTop=100;
+                await new Promise(resolve=>setTimeout(resolve,100));
+                const scrollTop=body.scrollTop;
                 document.querySelector('.main-settings-page [data-key="about"]').click();
                 await wait(()=>document.querySelector('#about-page')?.textContent.includes('com.apple.WebKit'));
+                await wait(()=>!settingsElement.isConnected);
+                if(!settingsElement.handler.$replacement.isConnected)throw Error('Covered settings page lost its placeholder');
                 const info=document.querySelector('#about-page .info-item');
                 if(info.hasAttribute('href')||!info.textContent.includes('WebKit'))throw Error('WebKit information offers an Android update link');
                 info.click();
@@ -80,6 +118,10 @@ final class PlatformUITests: BridgeTestCase {
                 await wait(()=>copied.length>0);
                 if(!copied.includes('iOS Version: '+device.version)||copied.includes('Android Version:'))throw Error('Incorrect platform in device report');
                 if(!copied.includes('com.apple.WebKit'))throw Error('Device report lost native WebKit information');
+                await stack.pop();
+                await wait(()=>!document.getElementById('about-page')&&settingsElement.isConnected);
+                await wait(()=>settingsElement.body.scrollTop===scrollTop);
+                if(settingsElement.body!==body)throw Error('Back rebuilt the settings DOM');
                 return true;
             } finally {
                 system.openInBrowser=openBrowser;Bridge.clipboard.copy=copy;

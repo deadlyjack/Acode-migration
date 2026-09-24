@@ -1,0 +1,58 @@
+import XCTest
+import WebKit
+
+@MainActor
+final class AlpineInteractionTests: BridgeTestCase {
+    func testExistingTerminalUIAndSessionIsolation() async throws {
+        let webView = try await editorWebView()
+        let result = try await webView.callAsyncJavaScript(#"""
+            if (!await Terminal.isInstalled() && !await Terminal.install()) throw new Error(Terminal.lastInstallError);
+            const manager = acode.require('terminal');
+            const first = await manager.createServer({name:'Alpine first'});
+            const second = await manager.createServer({name:'Alpine second'});
+            const content = instance => {
+                const buffer = instance.component.terminal.buffer.active;
+                return Array.from({length:buffer.length}, (_, i) => buffer.getLine(i)?.translateToString()).join('\n');
+            };
+            const wait = async (instance, text) => {
+                for (let i = 0; i < 100; i++) {
+                    if (content(instance).includes(text)) return;
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                throw new Error('Missing ' + text + ': ' + content(instance));
+            };
+            const input = (instance, text) => instance.component.terminal.input(text);
+            try {
+                input(first, 'cd /tmp; export ACODE_CHECK=first; printf "ONE:%s:%s\\n" "$PWD" "$ACODE_CHECK"\r');
+                input(second, 'cd /etc; export ACODE_CHECK=second; printf "TWO:%s:%s\\n" "$PWD" "$ACODE_CHECK"\r');
+                await wait(first, 'ONE:/tmp:first');
+                await wait(second, 'TWO:/etc:second');
+                await first.component.resizeTerminal(100, 40, true);
+                input(first, 'stty size\r');
+                await wait(first, '40 100');
+                input(first, 'sleep 30\r');
+                let sleeping = false;
+                for (let i = 0; i < 50; i++) {
+                    if ((await Executor.execute('ps -o comm', true)).split('\n').some(line => line.trim() === 'sleep')) { sleeping = true; break; }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                if (!sleeping) throw new Error('Foreground sleep did not start');
+                input(first, '\x03');
+                input(first, 'printf "SIGNAL:%s\\n" "$?"\r');
+                await wait(first, 'SIGNAL:130');
+                input(second, 'printf "STILL:%s\\n" "$ACODE_CHECK"\r');
+                await wait(second, 'STILL:second');
+                input(first, 'read -p "READY:$((1+1))" value; printf "INPUT:%s\\n" "$value"\r');
+                await wait(first, 'READY:2');
+                input(first, 'hello\r');
+                await wait(first, 'INPUT:hello');
+                return {first:content(first), second:content(second)};
+            } finally {
+                await manager.close(first.id);
+                await manager.close(second.id);
+            }
+            """#, arguments: [:], in: nil, contentWorld: .page) as? [String: String]
+        XCTAssertTrue(result?["first"]?.contains("SIGNAL:130") == true)
+        XCTAssertTrue(result?["second"]?.contains("STILL:second") == true)
+    }
+}

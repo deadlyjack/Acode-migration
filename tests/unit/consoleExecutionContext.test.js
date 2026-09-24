@@ -2,16 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
 	executeConsoleCommand,
 	executeConsoleScript,
-	resolveConsoleExecutionContext,
 } from "lib/consoleRuntime";
 
 describe("console execution context", () => {
-	it("forces standalone menu consoles to use the worker", () => {
-		expect(resolveConsoleExecutionContext(true, "page")).toBe("worker");
-		expect(resolveConsoleExecutionContext(false, "page")).toBe("page");
-	});
-
-	it("uses isolated worker execution by default", async () => {
+	it("uses isolated worker execution when selected", async () => {
 		const calls = [];
 		const result = await executeConsoleCommand({
 			context: "worker",
@@ -31,10 +25,9 @@ describe("console execution context", () => {
 		expect(result.value).toBe("isolated");
 	});
 
-	it("restores live page execution when explicitly selected", async () => {
+	it("evaluates interactive commands in the live page by default", async () => {
 		const calls = [];
 		const result = await executeConsoleCommand({
-			context: "page",
 			code: 'document.querySelector("main")',
 			workerExecutor: {
 				execute(code) {

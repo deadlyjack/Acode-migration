@@ -9,7 +9,7 @@ const { parseOptions } = require("../../dev/scripts/android.js");
 const { parseOptions: parseIOSOptions } = require("../../dev/scripts/ios.js");
 const packagePath = path.resolve(import.meta.dirname, "../../package.json");
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
 test.each([
 	["com.foxdebug.acode", "paid"],
@@ -24,13 +24,15 @@ test.each([
 		targetId: name, variant, mode: "p", bundle: true, channel: "fdroid", target: "device",
 	});
 	expect(parseIOSOptions(["ios", "prod", "--target=simulator"])).toMatchObject({
-		targetId: name, variant, mode: "Release", target: "simulator", device: false,
+		targetId: "app.acode", variant: "free", mode: "Release", target: "simulator", device: false,
 	});
-
+	vi.stubEnv("ACODE_PLATFORM", "ios");
+	expect(getAppConfig()).toEqual({ targetId: "app.acode", variant: "free" });
+	expect(parseOptions([])).toMatchObject({ targetId: name, variant });
 });
 
 test.each(["free", "paid", "fdroid", "apk", "bundle"])("rejects Android-only %s arguments for iOS", (argument) => {
-	expect(() => parseIOSOptions(["ios", argument])).toThrow(/For iOS/);
+	expect(() => parseIOSOptions(["ios", argument])).toThrow(/iOS has one free edition/);
 });
 
 test("rereads package identity after an edit and rejects unsupported package names", () => {

@@ -1,9 +1,5 @@
 import XCTest
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 final class RewardPassTests: XCTestCase {
     private let store = SecretStore(namespace: "ios-test.rewards." + UUID().uuidString)

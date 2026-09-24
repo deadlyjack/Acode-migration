@@ -2,7 +2,7 @@ const isIOS = globalThis.Bridge?.platformId === "ios";
 
 export default Object.freeze({
 	isIOS,
-	localExecution: !isIOS,
+	localExecution: true,
 	androidStorageAccess: !isIOS,
 	androidIntents: !isIOS,
 	appExit: !isIOS,

@@ -21,14 +21,14 @@ extension PreviewViewController: WKNavigationDelegate, WKUIDelegate, UITextField
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        progress.isHidden = false
+        progress.startAnimating()
         consoleAvailable = false
         updateMenu()
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        if !address.isFirstResponder { address.text = consoleOnly ? (title ?? webView.title ?? "Console") : webView.url?.absoluteString }
-        progress.isHidden = true
+        updateAddress()
+        progress.stopAnimating()
         if consoleEnabled { prepareConsole() }
         onPageFinished?()
     }
@@ -52,6 +52,12 @@ extension PreviewViewController: WKNavigationDelegate, WKUIDelegate, UITextField
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
         showDialog(prompt, defaultText: defaultText ?? "", confirm: true, completion: completionHandler)
     }
+
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        textField.text = webView.url?.absoluteString ?? initialURL.absoluteString
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) { updateAddress() }
 
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         let value = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -77,7 +83,7 @@ extension PreviewViewController: WKNavigationDelegate, WKUIDelegate, UITextField
     }
 
     private func navigationFailed(_ error: Error) {
-        progress.isHidden = true
+        progress.stopAnimating()
         guard (error as NSError).code != NSURLErrorCancelled, presentedViewController == nil else { return }
         showDialog(error.localizedDescription, defaultText: nil, confirm: false) { _ in }
     }

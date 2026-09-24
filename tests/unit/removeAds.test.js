@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
 	config: { HAS_PRO: false, BASE_URL: "https://acode.app" },
-	toast: vi.fn(),
+	alert: vi.fn(),
 	suppress: vi.fn(),
 	confirm: vi.fn(),
 	customTab: vi.fn(),
@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 	loader: { create: vi.fn(), show: vi.fn(), destroy: vi.fn() },
 	external: false,
 }));
-vi.mock("components/toast", () => ({ default: mocks.toast }));
+vi.mock("dialogs/alert", () => ({ default: mocks.alert }));
 vi.mock("dialogs/confirm", () => ({ default: mocks.confirm }));
 vi.mock("dialogs/loader", () => ({ default: mocks.loader }));
 vi.mock("utils/helpers", () => ({
@@ -39,9 +39,12 @@ beforeEach(() => {
 	mocks.confirm.mockResolvedValue(true);
 	mocks.customTab.mockResolvedValue();
 	vi.stubGlobal("strings", {
+		"remove ads": "Remove ads",
+		"loading...": "Loading...",
 		"no-product-info": "No product",
 		"purchase pending": "Pending",
 		failed: "Failed",
+		success: "Success",
 		canceled: "Cancelled",
 		"thank you :)": "Thanks",
 		"confirm-login": "Login?",
@@ -63,6 +66,63 @@ beforeEach(() => {
 });
 
 describe("shared Pro purchase flow", () => {
+	it("shows loading immediately through product lookup, billing, and acknowledgement", async () => {
+		let productsLoaded;
+		let acknowledged;
+		iap.getProducts.mockImplementation((ids, ok) => {
+			expect(mocks.loader.create).toHaveBeenCalledExactlyOnceWith(
+				"Remove ads",
+				"Loading...",
+			);
+			productsLoaded = ok;
+		});
+		iap.purchase.mockImplementation((id, ok) => ok());
+		iap.acknowledgePurchase.mockImplementation((token, ok) => {
+			acknowledged = ok;
+		});
+		const result = requestProPurchase();
+		expect(mocks.loader.destroy).not.toHaveBeenCalled();
+		productsLoaded([{ productId: "acode_pro_new" }]);
+		await Promise.resolve();
+		expect(mocks.loader.destroy).not.toHaveBeenCalled();
+		purchaseUpdated([
+			{
+				productIds: ["acode_pro_new"],
+				purchaseState: 1,
+				isAcknowledged: false,
+				purchaseToken: "pro",
+			},
+		]);
+		await Promise.resolve();
+		expect(mocks.loader.destroy).not.toHaveBeenCalled();
+		expect(mocks.config.HAS_PRO).toBe(false);
+		expect(mocks.alert).not.toHaveBeenCalled();
+		acknowledged();
+		await expect(result).resolves.toBe(true);
+		expect(mocks.loader.destroy).toHaveBeenCalledOnce();
+		expect(mocks.alert).toHaveBeenCalledExactlyOnceWith("Success", "Thanks");
+	});
+	it("dismisses loading on acknowledgement failure and allows a new attempt", async () => {
+		iap.acknowledgePurchase.mockImplementation((token, ok, fail) => fail(6));
+		const result = requestProPurchase();
+		const assertion = expect(result).rejects.toBe(6);
+		purchaseUpdated([
+			{
+				productIds: ["acode_pro_new"],
+				purchaseState: 1,
+				isAcknowledged: false,
+				purchaseToken: "pro",
+			},
+		]);
+		await assertion;
+		expect(mocks.loader.destroy).toHaveBeenCalledOnce();
+		expect(mocks.config.HAS_PRO).toBe(false);
+		const retry = requestProPurchase();
+		expect(mocks.loader.create).toHaveBeenCalledTimes(2);
+		purchaseError(iap.USER_CANCELED);
+		await expect(retry).resolves.toBe(false);
+		expect(mocks.loader.destroy).toHaveBeenCalledTimes(2);
+	});
 	it("ignores updates for other products before granting the requested Pro purchase", async () => {
 		const pending = removeAds();
 		purchaseUpdated([
@@ -172,13 +232,16 @@ describe("shared Pro purchase flow", () => {
 			purchaseUpdated([{ productIds: ["acode_pro_new"], purchaseState: 2 }]);
 		if (kind === "cancel") purchaseError(1);
 		await assertion;
+		expect(mocks.loader.destroy).toHaveBeenCalledOnce();
 		expect(mocks.config.HAS_PRO).toBe(false);
 		expect(mocks.suppress).not.toHaveBeenCalled();
+		expect(mocks.alert).not.toHaveBeenCalled();
 	});
 	it("shares an active billing request and grants Pro once after acknowledgement", async () => {
 		const first = removeAds();
 		const duplicate = removeAds();
 		expect(duplicate).toBe(first);
+		expect(mocks.loader.create).toHaveBeenCalledOnce();
 		const value = [
 			{
 				productIds: ["acode_pro_new"],
@@ -191,8 +254,9 @@ describe("shared Pro purchase flow", () => {
 		await first;
 		purchaseUpdated(value);
 		expect(iap.purchase).toHaveBeenCalledOnce();
+		expect(mocks.loader.destroy).toHaveBeenCalledOnce();
 		expect(mocks.config.HAS_PRO).toBe(true);
-		expect(mocks.toast).toHaveBeenCalledOnce();
+		expect(mocks.alert).toHaveBeenCalledExactlyOnceWith("Success", "Thanks");
 		expect(mocks.suppress).toHaveBeenCalledWith("pro", true);
 	});
 	it("treats cancelled billing as a cancelled request", async () => {
@@ -210,7 +274,7 @@ describe("shared Pro purchase flow", () => {
 			{ productIds: ["acode_pro_new"], purchaseState: 1, isAcknowledged: true },
 		]);
 		expect(mocks.config.HAS_PRO).toBe(true);
-		expect(mocks.toast).toHaveBeenCalledOnce();
+		expect(mocks.alert).toHaveBeenCalledExactlyOnceWith("Success", "Thanks");
 	});
 	it("cancels pending product lookup and ignores its late result", async () => {
 		let productsLoaded;
@@ -222,6 +286,7 @@ describe("shared Pro purchase flow", () => {
 		controller.abort();
 		await expect(result).resolves.toBe(false);
 		productsLoaded([{ productId: "acode_pro_new" }]);
+		expect(mocks.loader.destroy).toHaveBeenCalledOnce();
 		expect(iap.purchase).not.toHaveBeenCalled();
 		expect(mocks.config.HAS_PRO).toBe(false);
 	});

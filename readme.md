@@ -65,7 +65,7 @@ pnpm run lang update
 
 ## • Contributing & Building the Application
 
-Build scripts live in `dev/`. Set `package.json.name` to `com.foxdebug.acode` (paid) or `com.foxdebug.acodefree` (free), then run `npm run build -- dev apk`. Paid builds exclude AdMob and its SDKs. The iOS build commands and free-edition advertising configuration are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+Build scripts live in `dev/`. For Android, set `package.json.name` to `com.foxdebug.acode` (paid) or `com.foxdebug.acodefree` (free), then run `npm run build -- dev apk`. Paid builds exclude AdMob and its SDKs. iOS has one free app with bundle ID `app.acode`, using the `runner` scheme. Its build commands and advertising configuration are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 For iOS, copy `platforms/ios/Config.xcconfig.example` to `platforms/ios/Config.xcconfig` on a new checkout. Keep only local signing settings in this ignored file; public build settings belong in the Xcode project.
 
@@ -92,3 +92,5 @@ For plugin development information, refer to: [Acode Plugin Documentation](https
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Acode-Foundation/Acode&type=Date" />
  </picture>
 </a>
+
+The iOS terminal uses an ARM64 Alpine emulator with the existing terminal UI and AXS server. See [runtime sources, build requirements, and compatibility limits](platforms/ios/Alpine/README.md).

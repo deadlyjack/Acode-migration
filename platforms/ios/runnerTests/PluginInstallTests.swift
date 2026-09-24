@@ -1,10 +1,6 @@
 import XCTest
 import CryptoKit
-#if ACODE_FREE
-@testable import runnerFree
-#else
 @testable import runner
-#endif
 
 @MainActor
 final class PluginInstallTests: BridgeTestCase {

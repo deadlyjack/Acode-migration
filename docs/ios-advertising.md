@@ -1,11 +1,9 @@
 # iOS advertising
 
-The free target links Google Mobile Ads 13.10.0 and User Messaging Platform 3.1.0
-through Swift Package Manager. The paid target does not compile the ad sources,
-link either SDK, or include their resources or metadata. The build scripts choose
-`runnerFree` or `runner` from `package.json.name`, just like the Android editions.
-Each target has its own app, test bundle and Swift module output so switching
-editions does not reuse the other edition's compiled module.
+iOS has one free app, built with the `runner` target and scheme using bundle ID
+`app.acode`. It links Google Mobile Ads 13.10.0 and User Messaging Platform 3.1.0
+through Swift Package Manager. The iOS native and web builds always include the
+free implementation, regardless of the Android edition in `package.json.name`.
 
 `platforms/ios/ads` adapts the original AdMob Plus iOS format implementations and
 native-ad XIB from [admob-plus](https://github.com/admob-plus/admob-plus) at commit
@@ -48,11 +46,11 @@ iOS; it still enforces the existing Android SDK minimum on Android.
 
 ## Configuration
 
-Free debug builds use Google's published [iOS test ad units](https://developers.google.com/admob/ios/test-ads)
+Debug builds use Google's published [iOS test ad units](https://developers.google.com/admob/ios/test-ads)
 and sample app ID. Set `ACODE_IOS_ADMOB_APP_ID` to a configured iOS app ID to test
 that app's consent messages; debug ad units remain Google's test units.
 
-Free release builds require all four environment variables:
+Release builds require all four environment variables:
 
 - `ACODE_IOS_ADMOB_APP_ID`
 - `ACODE_IOS_ADMOB_BANNER_ID`
@@ -61,12 +59,12 @@ Free release builds require all four environment variables:
 
 The release script rejects missing, malformed and Google demo IDs. Use iOS IDs;
 Android ad-unit IDs are not a substitute. No production IDs are committed.
-`dev/scripts/iosAds.js` creates `.ios-build/Free-Info.plist` from the shared app
-metadata and adds the free target's SDK keys. `dev/ios/skadnetwork.json` is the
+`dev/scripts/iosAds.js` creates `.ios-build/App-Info.plist` from the shared app
+metadata and adds the SDK keys. `dev/ios/skadnetwork.json` is the
 50-entry list from Google's [setup guide](https://developers.google.com/admob/ios/quick-start),
 retrieved on 2026-09-23. Refresh it when updating the SDK. Run the normal build
-script before building `runnerFree` directly in Xcode so its metadata and web
-bundle match the chosen edition and mode.
+script before building `runner` directly in Xcode so its metadata and web
+bundle match the build mode.
 
 The deprecated anchored banner size helpers and legacy child-directed/under-age
 request fields are retained to preserve the existing public API's dimensions and
@@ -76,7 +74,7 @@ policy would be a behavior change.
 ## Validation boundaries
 
 Automated simulator checks use actual SDK classes with network loads replaced only in the
-banner layout fixture. They cover edition exclusion, API dispatch, consent gating,
+banner layout fixture. They cover advertising inclusion, the app identity, API dispatch, consent gating,
 load invalidation, callback isolation, paid-impression format/currency payloads,
 stacking/hiding/destroying banners, native
 XIB loading and fullscreen ownership. Shared tests cover iOS ID selection,
