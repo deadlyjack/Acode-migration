@@ -128,6 +128,19 @@ export default {
 		return msg + (extra ? "<br>" + extra : "");
 	},
 	/**
+	 * Whether an error represents a native picker being dismissed by the user.
+	 * Covers the `code === 0` convention and the "Operation cancelled" string
+	 * Android and iOS pickers report.
+	 * @param {any} err
+	 * @returns {boolean}
+	 */
+	isCancelled(err) {
+		if (!err) return false;
+		if (typeof err === "object" && err.code === 0) return true;
+		const message = typeof err === "string" ? err : err.message;
+		return /cancel/i.test(message || "");
+	},
+	/**
 	 *
 	 * @param {Error} err
 	 * @param  {...string} args

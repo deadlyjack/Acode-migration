@@ -1,9 +1,10 @@
 # iOS advertising
 
-iOS has one free app, built with the `runner` target and scheme using bundle ID
-`app.acode`. It links Google Mobile Ads 13.10.0 and User Messaging Platform 3.1.0
-through Swift Package Manager. The iOS native and web builds always include the
-free implementation, regardless of the Android edition in `package.json.name`.
+iOS has one free app, built with the `runner` target and scheme using the bundle
+ID from `package.json.appleAppId`. It links Google Mobile Ads 13.10.0 and User
+Messaging Platform 3.1.0 through Swift Package Manager. The iOS native and web
+builds always include the free implementation, regardless of the Android edition
+in `package.json.androidPackageId`.
 
 `platforms/ios/ads` adapts the original AdMob Plus iOS format implementations and
 native-ad XIB from [admob-plus](https://github.com/admob-plus/admob-plus) at commit

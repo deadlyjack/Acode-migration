@@ -336,6 +336,7 @@ function backupRestore() {
 				backupRestore.restore(data.uri);
 			},
 			(error) => {
+				if (helpers.isCancelled(error)) return;
 				console.error("File picker error:", error);
 				toast(strings.error || "Error selecting file");
 			},

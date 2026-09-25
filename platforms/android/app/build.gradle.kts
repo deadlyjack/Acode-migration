@@ -9,8 +9,8 @@ val acode = file("../../../package.json").parseJsonObject()
 val selectedEdition = mapOf(
     "com.foxdebug.acode" to "paid",
     "com.foxdebug.acodefree" to "free"
-)[acode["name"] as String]
-    ?: throw GradleException("Set package.json name to com.foxdebug.acode (paid) or com.foxdebug.acodefree (free).")
+)[acode["androidPackageId"] as String]
+    ?: throw GradleException("Set package.json androidPackageId to com.foxdebug.acode (paid) or com.foxdebug.acodefree (free).")
 
 android {
     //this is not package name do not change

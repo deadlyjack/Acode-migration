@@ -136,8 +136,10 @@ The APK will be at: `platforms/android/app/build/outputs/apk/<edition>/debug/app
 Use macOS with Xcode 26 and an installed iOS simulator runtime, plus Node.js 24.
 Copy `platforms/ios/Config.xcconfig.example` to `platforms/ios/Config.xcconfig`
 once on a new checkout. This ignored file is only for local signing settings such
-as `DEVELOPMENT_TEAM`; leave the team empty for simulator builds. Keep version,
-icon and other public build settings in the Xcode project.
+as `DEVELOPMENT_TEAM`; leave the team empty for simulator builds. Version, build
+number, display name and bundle ID are synced from `package.json` into the Xcode
+project by `dev/sync.js`; keep the icon and other public build settings in the
+Xcode project.
 Keep `runner/PrivacyInfo.xcprivacy` aligned with native API use: it declares file
 metadata, app-local preferences and elapsed-time measurements. Both targets
 also declare the local capacity checks used by filesystem requests (`E174.1`).
@@ -237,11 +239,12 @@ retries replace partial content. These tests need the loopback fixture above.
 interrupted FTP/FTPS uploads and downloads in active and passive modes. Its
 fixture closes disposable connections mid-transfer; keep these checks local.
 
-iOS has one free app: the `runner` target and scheme use bundle ID `app.acode`.
-`package.json.name` selects the Android edition only; iOS always builds the free
-web bundle and native advertising implementation. Version and build number come
-from `package.json`. Simulator builds use ad-hoc signing so Keychain services work
-without a distribution certificate.
+iOS has one free app: the `runner` target and scheme use the bundle ID from
+`package.json.appleAppId`, while `package.json.androidPackageId` selects the
+Android edition. iOS always builds the free web bundle and native advertising
+implementation. Version, build number and display name are synced from
+`package.json` by `dev/sync.js`. Simulator builds use ad-hoc signing so Keychain
+services work without a distribution certificate.
 
 The target includes `platforms/ios/ads`, Google Mobile Ads/UMP and advertising
 metadata. Debug builds use Google's iOS test units. Release builds require
@@ -344,19 +347,19 @@ their file URIs; parsing them as URL text loses literal filename characters.
 - `src/platforms/android` and `src/platforms/ios`: platform transports using the shared callback and binary protocol.
 - `platforms/ios`: iOS app, with the template's runtime in `runner` and native services in `runner/lib`. Simulator tests and native dependencies remain alongside the app. See the [port checklist](docs/ios-port.md) for remaining work.
 - `platforms/android/app/src/main/java/com/foxdebug/acode/runtime/ServiceRegistry.kt`: native service registration, extended by the `free`/`paid` and `store`/`fdroid` source sets.
-- `package.json`: app ID (`name`), version and Android version code.
+- `package.json`: Android package ID (`androidPackageId`), Apple app ID (`appleAppId`), version and version code.
 
 The native APIs are available through `Bridge.exec`, `Bridge.file`, `Bridge.http`, `Bridge.clipboard` and `Bridge.websocket`. App source uses these APIs or ordinary imports. For existing third-party plugins, `src/native/pluginCompatibility.js` exposes the legacy `cordova` namespace and module names for the public native APIs, forwarding to the same implementations. Existing direct globals and `deviceready`, pause/resume and hardware-button events remain available. Keep compatibility aliases in that file; do not use them inside Acode or add Cordova dependencies. Advertising and billing APIs retain their build-edition restrictions.
 
-Set `package.json.name` before building or starting development:
+Set `package.json.androidPackageId` before building or starting development:
 
-| `name` | Edition |
+| `androidPackageId` | Edition |
 | --- | --- |
 | `com.foxdebug.acode` | Paid, without AdMob |
 | `com.foxdebug.acodefree` | Free, with AdMob |
 
-The scripts and Android Studio read this name; there is no free/paid command argument.
-After changing the name, restart `npm run dev`. Only the selected Gradle flavor is enabled.
+The scripts and Android Studio read this value; there is no free/paid command argument.
+After changing it, restart `npm run dev`. Only the selected Gradle flavor is enabled.
 Use `npm run build` to refresh web assets before building directly in Android Studio, which uses the last compiled web bundle.
 `npm run dev` hot-reloads JavaScript through Rspack and rebuilds the app when tracked Android source changes.
 Startup probes the dev server with Proteus's three-second timeout and loads its

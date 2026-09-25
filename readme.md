@@ -65,9 +65,9 @@ pnpm run lang update
 
 ## • Contributing & Building the Application
 
-Build scripts live in `dev/`. For Android, set `package.json.name` to `com.foxdebug.acode` (paid) or `com.foxdebug.acodefree` (free), then run `npm run build -- dev apk`. Paid builds exclude AdMob and its SDKs. iOS has one free app with bundle ID `app.acode`, using the `runner` scheme. Its build commands and advertising configuration are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+Build scripts live in `dev/`. For Android, set `package.json.androidPackageId` to `com.foxdebug.acode` (paid) or `com.foxdebug.acodefree` (free), then run `npm run build -- dev apk`. Paid builds exclude AdMob and its SDKs. iOS has one free app whose bundle ID comes from `package.json.appleAppId`, using the `runner` scheme. Its build commands and advertising configuration are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-For iOS, copy `platforms/ios/Config.xcconfig.example` to `platforms/ios/Config.xcconfig` on a new checkout. Keep only local signing settings in this ignored file; public build settings belong in the Xcode project.
+For iOS, copy `platforms/ios/Config.xcconfig.example` to `platforms/ios/Config.xcconfig` on a new checkout. Keep only local signing settings in this ignored file. Version, build number, display name and bundle ID are synced into the Xcode project from `package.json` by `dev/sync.js` on every build.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions.
 

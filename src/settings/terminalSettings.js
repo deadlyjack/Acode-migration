@@ -424,7 +424,10 @@ export default function terminalSettings() {
 						`${strings["restored successfully"]}.`,
 					);
 				},
-				toast,
+				(error) => {
+					if (helpers.isCancelled(error)) return;
+					toast(error);
+				},
 				"application/x-tar",
 			);
 		} catch (error) {

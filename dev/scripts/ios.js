@@ -1,7 +1,7 @@
-const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { getAppConfig } = require("../config");
+const { sync } = require("../sync");
 const { prepareAds } = require("./iosAds");
 const root = path.resolve(__dirname, "../..");
 
@@ -45,6 +45,7 @@ function parseOptions(args) {
 function prepare(options) {
 	if (process.platform !== "darwin")
 		throw new Error("iOS builds require macOS and Xcode.");
+	sync();
 	if (!options.skipWeb) {
 		run(
 			process.execPath,
@@ -66,9 +67,6 @@ function build(options) {
 	if (options.action === "test" && (!options.target || options.device))
 		throw new Error("iOS tests require --target=<simulator UUID>.");
 	prepare(options);
-	const pkg = JSON.parse(
-		fs.readFileSync(path.join(root, "package.json"), "utf8"),
-	);
 	const sdk = options.device ? "iphoneos" : "iphonesimulator";
 	run("xcodebuild", [
 		"-project",
@@ -89,8 +87,6 @@ function build(options) {
 		".ios-build",
 		"-clonedSourcePackagesDirPath",
 		".ios-build/SourcePackages",
-		`MARKETING_VERSION=${pkg.version}`,
-		`CURRENT_PROJECT_VERSION=${pkg.versionCode}`,
 		...(options.device
 			? ["CODE_SIGNING_ALLOWED=NO"]
 			: ["CODE_SIGNING_ALLOWED=YES", "CODE_SIGN_IDENTITY=-"]),

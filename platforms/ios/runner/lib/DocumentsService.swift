@@ -37,7 +37,7 @@ final class DocumentsService: BaseService, UIDocumentPickerDelegate {
                 watches.removeValue(forKey: args[safe: 0] as? String ?? "")?.stop()
                 callback.success()
             case "list volumes":
-                callback.success([["name": "Files", "uuid": "ios-files"], ["name": "Acode", "uuid": "ios-documents", "path": files.documents.path]])
+                callback.success([["name": "Acode", "uuid": "ios-documents", "path": files.documents.path]])
             case "storage permission":
                 if args[safe: 0] as? String == "ios-documents" { callback.success("file://" + files.documents.path) }
                 else { pick(type: .folder, uriOnly: true, callback: callback) }

@@ -109,6 +109,27 @@ final class SystemUITests: BridgeTestCase {
         XCTAssertEqual(backUnsupported, true)
     }
 
+    func testThemeAppliesSystemBarBackgroundColor() async throws {
+        let webView = try await editorWebView()
+        var responder: UIResponder? = webView
+        while responder != nil, !(responder is WebViewController) { responder = responder?.next }
+        let controller = try XCTUnwrap(responder as? WebViewController)
+
+        let theme: [String: Any] = ["name": "Fixture", "type": "dark", "version": "free"]
+        try await call(webView, action: "set-ui-theme", args: ["#f8f9fa", theme])
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(controller.view.backgroundColor, UIColor(hexString: "#f8f9fa"))
+
+        // Dialog darkening sends the darkened color as the first argument.
+        try await call(webView, action: "set-ui-theme", args: ["#101010", theme])
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(controller.view.backgroundColor, UIColor(hexString: "#101010"))
+
+        try await call(webView, service: "SystemBarPlugin", action: "setStatusBarBackgroundColor", args: [1, 2, 3])
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(controller.view.backgroundColor, UIColor(red: 1.0 / 255, green: 2.0 / 255, blue: 3.0 / 255, alpha: 1))
+    }
+
     private func call(_ webView: WKWebView, service: String = "System", action: String, args: [Any]) async throws {
         _ = try await webView.callAsyncJavaScript("await new Promise((resolve,reject)=>Bridge.exec(resolve,reject,service,action,args))", arguments: ["service": service, "action": action, "args": args], in: nil, contentWorld: .page)
     }

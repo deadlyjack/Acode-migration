@@ -53,7 +53,6 @@ final class FilesBrowserTests: BridgeTestCase {
             """, arguments: ["name": file.lastPathComponent], in: nil, contentWorld: .page)
         let value = try XCTUnwrap(result as? [String: Any])
         let entries = try XCTUnwrap(value["entries"] as? [String])
-        XCTAssertTrue(entries.contains("ios-files"))
         XCTAssertTrue(entries.contains("ios-documents"))
         XCTAssertFalse(entries.contains("terminal-public"))
         XCTAssertFalse(entries.contains("internal-storage"))

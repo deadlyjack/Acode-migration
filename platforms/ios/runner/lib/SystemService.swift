@@ -59,7 +59,7 @@ final class SystemService: BaseService {
                 share.exec(action: "shareFile", args: args, callback: callback)
             case "open-in-browser": browser.exec(action: "external", args: args, callback: callback)
             case "in-app-browser": preview.exec(action: action, args: args, callback: callback)
-            case "set-ui-theme": native.exec(action: "setTheme", args: [args[safe: 1] ?? [:]], callback: callback)
+            case "set-ui-theme": native.exec(action: "setTheme", args: [args[safe: 0] ?? "", args[safe: 1] ?? [:]], callback: callback)
             case "set-app-icon": AppIconService.set(args[safe: 0] as? String ?? "default", callback: callback)
             case "has-permission", "request-permission":
                 native.exec(action: action == "has-permission" ? "hasPermission" : "requestPermission", args: args, callback: callback)

@@ -940,7 +940,7 @@ function createMainMenu({ top, bottom, toggler }) {
 			return mustache.render($_menu, {
 				...strings,
 				local_execution: platform.localExecution,
-				app_exit: platform.appExit,
+				app_exit: platform.appExit || platform.isIOS,
 				"running processes":
 					strings["running processes"] || "Running processes",
 				can_save_file: canSaveFile(window.editorManager?.activeFile),

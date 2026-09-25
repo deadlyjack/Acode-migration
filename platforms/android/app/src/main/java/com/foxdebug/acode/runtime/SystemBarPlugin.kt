@@ -214,9 +214,9 @@ class SystemBarPlugin : Service() {
             if (controller != null) {
                 val appearance = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                 if (isBackgroundColorLight) {
-                    controller.setSystemBarsAppearance(0, appearance)
-                } else {
                     controller.setSystemBarsAppearance(appearance, appearance)
+                } else {
+                    controller.setSystemBarsAppearance(0, appearance)
                 }
             }
         }

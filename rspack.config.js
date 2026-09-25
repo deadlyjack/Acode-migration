@@ -1,6 +1,7 @@
 const path = require('path');
 const { rspack } = require('@rspack/core');
 const { getAppConfig, getWebBundlePath } = require('./dev/config');
+const StripSourceMapCommentsPlugin = require('./dev/stripSourceMapComments');
 
 module.exports = (env, options) => {
   const { mode = 'development' } = options;
@@ -184,6 +185,7 @@ module.exports = (env, options) => {
       roots: [],
     },
     plugins: [
+      new StripSourceMapCommentsPlugin(),
       new rspack.CopyRspackPlugin({
         patterns: [
           { from: 'src/index.html', to: 'index.html' },

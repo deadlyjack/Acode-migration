@@ -145,6 +145,12 @@ final class WebViewController: UIViewController {
         }
     }
 
+    func setSystemBarColor(_ color: UIColor) {
+        view.backgroundColor = color
+        webView.backgroundColor = color
+        view.window?.backgroundColor = color
+    }
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }

@@ -13,7 +13,7 @@ final class BuildInfoService: BaseService {
         let debug = false
         #endif
         let flavor = "free"
-        callback.success(["packageName": id, "basePackageName": "app.acode", "displayName": name, "name": name,
+        callback.success(["packageName": id, "basePackageName": id, "displayName": name, "name": name,
                           "version": info["CFBundleShortVersionString"] as? String ?? "", "versionCode": Int(info["CFBundleVersion"] as? String ?? "0") ?? 0,
                           "debug": debug, "buildType": debug ? "debug" : "release", "flavor": flavor])
     }
@@ -41,6 +41,7 @@ final class AppService: BaseService {
                 WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: .distantPast) {
                     callback.success(action == "clear-cache" ? "Cache cleared" : nil)
                 }
+            case "exitApp": exit(0)
             default: callback.error("\(action) is unavailable on iOS")
             }
         }
@@ -58,7 +59,7 @@ final class SystemBarService: BaseService {
             case "setStatusBarBackgroundColor":
                 if args.count >= 3 {
                     let color = UIColor(red: (args[0] as? Double ?? 0) / 255, green: (args[1] as? Double ?? 0) / 255, blue: (args[2] as? Double ?? 0) / 255, alpha: args[safe: 3] as? Double ?? 1)
-                    controller.view.backgroundColor = color
+                    controller.setSystemBarColor(color)
                 }
             default: callback.error("Unknown SystemBar action: \(action)"); return
             }

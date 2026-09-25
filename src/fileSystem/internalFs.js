@@ -12,7 +12,7 @@ const internalFs = {
 	 */
 	listDir(url) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, url);
 			window.resolveLocalFileSystemURL(url, success, reject);
 
 			function success(fs) {
@@ -40,7 +40,7 @@ const internalFs = {
 		const dirname = Url.dirname(filename);
 
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, filename);
 			if (!create) {
 				window.resolveLocalFileSystemURL(filename, write, reject);
 				return;
@@ -74,7 +74,7 @@ const internalFs = {
 	 */
 	delete(filename) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, filename);
 			window.resolveLocalFileSystemURL(
 				filename,
 				(entry) => {
@@ -97,7 +97,7 @@ const internalFs = {
 	 */
 	readFile(filename) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, filename);
 			window.resolveLocalFileSystemURL(
 				filename,
 				(fileEntry) => {
@@ -135,7 +135,7 @@ const internalFs = {
 	 */
 	renameFile(url, newname) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, url);
 			window.resolveLocalFileSystemURL(
 				url,
 				(fs) => {
@@ -164,7 +164,7 @@ const internalFs = {
 	 */
 	createDir(path, dirname) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, path);
 			window.resolveLocalFileSystemURL(
 				path,
 				(fs) => {
@@ -212,7 +212,7 @@ const internalFs = {
 	 */
 	moveOrCopy(action, src, dest) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, src);
 			this.verify(src, dest)
 				.then((res) => {
 					const { src, dest } = res;
@@ -235,7 +235,7 @@ const internalFs = {
 	 */
 	stats(filename) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, filename);
 			window.resolveLocalFileSystemURL(
 				filename,
 				(entry) => {
@@ -271,7 +271,7 @@ const internalFs = {
 	 */
 	verify(src, dest) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, src);
 			window.resolveLocalFileSystemURL(
 				src,
 				(srcEntry) => {
@@ -311,7 +311,7 @@ const internalFs = {
 	 */
 	exists(url) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
+			reject = setMessage(reject, url);
 			window.resolveLocalFileSystemURL(
 				url,
 				(entry) => {
@@ -338,11 +338,12 @@ const internalFs = {
 	getErrorMessage,
 };
 
-function setMessage(reject) {
+function setMessage(reject, url) {
 	return function (err) {
 		if (err.code) {
 			const message = getErrorMessage(err.code);
 			err.message = message;
+			err.url = url;
 			return reject(err);
 		}
 		reject(err);

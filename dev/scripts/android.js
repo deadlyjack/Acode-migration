@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { getAppConfig } = require("../config");
+const { sync } = require("../sync");
 const root = path.resolve(__dirname, "../..");
 
 module.exports = { parseOptions, build, launch };
@@ -24,7 +25,7 @@ if (require.main === module) {
 function parseOptions(args) {
 	if (args.some((arg) => /^(free|paid)$/i.test(arg))) {
 		throw new Error(
-			"Choose free or paid with package.json name; remove the free/paid argument.",
+			"Choose free or paid with package.json androidPackageId; remove the free/paid argument.",
 		);
 	}
 	return {
@@ -39,6 +40,7 @@ function parseOptions(args) {
 }
 
 function build(options) {
+	sync();
 	if (!options.skipWeb) {
 		run(
 			process.execPath,
@@ -50,7 +52,10 @@ function build(options) {
 				"--mode",
 				options.mode === "p" ? "production" : "development",
 			],
-			{ ACODE_PLATFORM: "android", ACODE_FDROID: String(options.channel === "fdroid") },
+			{
+				ACODE_PLATFORM: "android",
+				ACODE_FDROID: String(options.channel === "fdroid"),
+			},
 		);
 	}
 	const type = options.mode === "p" ? "release" : "debug";

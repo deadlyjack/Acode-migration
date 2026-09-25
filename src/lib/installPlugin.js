@@ -8,6 +8,7 @@ import helpers from "utils/helpers";
 import Url from "utils/Url";
 import { isVersionGreater } from "utils/version";
 import config from "./config";
+import formatDownloadProgress from "./downloadProgress";
 import InstallState from "./installState";
 import { loadPluginWithTimeout } from "./loadPlugins";
 import platform from "./platform";
@@ -77,9 +78,7 @@ export default async function installPlugin(
 			plugin = await fsOperation(pluginUrl).readFile(
 				undefined,
 				(loaded, total) => {
-					loaderDialog.setMessage(
-						`${strings.loading} ${((loaded / total) * 100).toFixed(2)}%`,
-					);
+					loaderDialog.setMessage(formatDownloadProgress(loaded, total));
 				},
 			);
 		} else {
@@ -265,6 +264,7 @@ export default async function installPlugin(
 			deleteRedundantFiles(pluginDir, state);
 		}
 	} catch (err) {
+		console.error("plugin install error", err);
 		try {
 			// Clear the install state if installation fails
 			if (state) await state.clear();

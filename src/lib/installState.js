@@ -1,5 +1,6 @@
 import fsOperation from "fileSystem";
 import Url from "utils/Url";
+import platform from "./platform";
 
 const INSTALL_STATE_STORAGE = Url.join(DATA_STORAGE, ".install-state");
 
@@ -110,7 +111,9 @@ export default class InstallState {
 	}
 
 	async delete(url) {
-		url = url.toLowerCase();
+		if (!platform.isIOS) {
+			url = url.toLowerCase();
+		}
 		if (await fsOperation(url).exists()) {
 			await fsOperation(url).delete();
 		}

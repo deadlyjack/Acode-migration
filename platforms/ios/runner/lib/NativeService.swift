@@ -40,7 +40,8 @@ final class NativeService: BaseService {
             case "getIpAddresses":          getIpAddresses(args: args, callback: callback)
             case "hideSplashScreen":        callback.success()
             case "haptic":                  haptic(callback: callback)
-            case "exitApp", "restartApp": callback.error("Programmatic app exit is unavailable on iOS")
+            case "exitApp": exit(0)
+            case "restartApp": callback.error("Programmatic app restart is unavailable on iOS")
             case "requestIgnoreBatteryOptimization": callback.success(1)
             default:                        callback.error("Unknown action: \(action)")
         }
@@ -111,28 +112,28 @@ final class NativeService: BaseService {
     // MARK: - setTheme / setSystemBarColor
 
     private func setTheme(args: [Any], callback: Callback) {
-        let theme: [String: Any]?
-        if let dict = args[safe: 0] as? [String: Any] {
-            theme = dict
-        } else if let themeStr = args[safe: 0] as? String,
-                  let data = themeStr.data(using: .utf8) {
-            theme = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        } else {
-            theme = nil
-        }
-        guard let theme else {
+        let systemBarColor = args[safe: 0] as? String
+        guard let theme = parseTheme(args[safe: 1]) ?? parseTheme(args[safe: 0]) else {
             callback.error("Invalid theme JSON"); return
         }
         DispatchQueue.main.async { [weak self] in
-            if let bgHex = theme["primary"] as? String, let color = UIColor(hexString: bgHex) {
-                self?.viewController?.view.backgroundColor = color
-                self?.viewController?.webView.backgroundColor = color
+            let backgroundHex = systemBarColor ?? theme["primaryColor"] as? String
+            if let backgroundHex, let color = UIColor(hexString: backgroundHex) {
+                self?.viewController?.setSystemBarColor(color)
             }
             if let type = theme["type"] as? String {
                 self?.viewController?.setThemeType(type)
             }
             callback.success()
         }
+    }
+
+    private func parseTheme(_ value: Any?) -> [String: Any]? {
+        if let dict = value as? [String: Any] { return dict }
+        if let themeStr = value as? String, let data = themeStr.data(using: .utf8) {
+            return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        }
+        return nil
     }
 
     private func setSystemBarColor(args: [Any], callback: Callback) {

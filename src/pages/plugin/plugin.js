@@ -265,6 +265,7 @@ export default async function PluginInclude(
 			}
 			render();
 		} catch (err) {
+			console.log("Uninstall error", err);
 			window.log("error", err);
 			helpers.error(err);
 		}

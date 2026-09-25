@@ -27,6 +27,12 @@ test("iPhone development always prepares advertising metadata before opening Xco
 	expect(result.log.mock.calls.flat().join("\n")).toContain("runner scheme");
 });
 
+test("preparing native files syncs package identity before opening Xcode", () => {
+	const result = runScript(["run", "--device", "--skip-web"]);
+	expect(result.process.exitCode).toBeUndefined();
+	expect(result.sync).toHaveBeenCalledOnce();
+});
+
 test("an explicit simulator target still builds, boots, installs and launches", () => {
 	const result = runScript(["run", "--target=simulator", "--skip-web"]);
 	expect(result.process.exitCode).toBeUndefined();
@@ -67,6 +73,7 @@ function runScript(args) {
 		stderr: "",
 	}));
 	const prepareAds = vi.fn();
+	const sync = vi.fn();
 	const module = { exports: {} };
 	const scriptProcess = {
 		argv: [process.execPath, filename, ...args],
@@ -77,6 +84,7 @@ function runScript(args) {
 	const scriptRequire = (name) => {
 		if (name === "node:child_process") return { spawnSync: spawn };
 		if (name === "../config") return { getAppConfig: () => ({ variant: "free", targetId: "app.acode" }) };
+		if (name === "../sync") return { sync };
 		if (name === "./iosAds") return { prepareAds };
 		return require(name);
 	};
@@ -91,5 +99,5 @@ function runScript(args) {
 		console: { log, error },
 		__dirname: path.dirname(filename),
 	}, { filename });
-	return { spawn, prepareAds, process: scriptProcess, log, error };
+	return { spawn, prepareAds, sync, process: scriptProcess, log, error };
 }

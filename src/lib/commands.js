@@ -848,7 +848,7 @@ if (!platform.localExecution) {
 	delete commands["new-terminal"];
 	delete commands["running-processes"];
 }
-if (!platform.appExit) delete commands.exit;
+if (!platform.appExit && !platform.isIOS) delete commands.exit;
 if (!platform.androidIntents) {
 	delete commands["edit-with"];
 	delete commands["pin-file-shortcut"];

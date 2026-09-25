@@ -1,9 +1,11 @@
 {
-  "name": "com.foxdebug.acode",
+  "name": "acode-app",
   "displayName": "Acode",
-  "version": "1.13.5",
+  "version": "1.13.6",
   "versionCode": 1011,
-  "description": "Acode is a code editor for Android",
+  "androidPackageId": "com.foxdebug.acode",
+  "appleAppId": "app.acode",
+  "description": "Powerful code editor and terminal for IOS and Android",
   "scripts": {
     "lang": "node ./dev/lang.js",
     "build": "sh dev/scripts/build.sh",

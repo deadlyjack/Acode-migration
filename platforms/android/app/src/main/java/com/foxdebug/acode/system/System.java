@@ -40,7 +40,6 @@ import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
 import androidx.documentfile.provider.DocumentFile;
 import com.foxdebug.acode.BuildConfig;
-import com.foxdebug.acode.system.Ui.Theme;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -106,7 +105,6 @@ public class System extends Service {
   private int REQ_PERMISSIONS = 1;
   private int REQ_PERMISSION = 2;
   private int systemBarColor = 0xFF000000;
-  private Theme theme;
   private Callback intentHandler;
   private String fileProviderAuthority;
   private RewardPassManager rewardPassManager;
@@ -1829,7 +1827,6 @@ public class System extends Service {
   ) {
     try {
       this.systemBarColor = Color.parseColor(systemBarColor);
-      this.theme = new Theme(scheme);
 
       AppPreferences.INSTANCE.set("BackgroundColor", this.systemBarColor);
       webView.getBridge().postMessage("updateSystemBars", null);
@@ -1890,7 +1887,7 @@ public class System extends Service {
   }
 
   private void setStatusBarStyle(final Window window) {
-    String themeType = theme.getType();
+    boolean lightBackground = isColorLight(this.systemBarColor);
     View decorView = window.getDecorView();
     int uiOptions;
     int lightStatusBar;
@@ -1899,7 +1896,7 @@ public class System extends Service {
       uiOptions = getDeprecatedSystemUiVisibility(decorView);
       lightStatusBar = deprecatedFlagUiLightStatusBar();
 
-      if (themeType.equals("light")) {
+      if (lightBackground) {
         setDeprecatedSystemUiVisibility(decorView, uiOptions | lightStatusBar);
         return;
       }
@@ -1912,7 +1909,7 @@ public class System extends Service {
     ).getSystemBarsAppearance();
     lightStatusBar = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS;
 
-    if (themeType.equals("light")) {
+    if (lightBackground) {
       decorView
         .getWindowInsetsController()
         .setSystemBarsAppearance(uiOptions | lightStatusBar, lightStatusBar);
@@ -1925,7 +1922,7 @@ public class System extends Service {
   }
 
   private void setNavigationBarStyle(final Window window) {
-    String themeType = theme.getType();
+    boolean lightBackground = isColorLight(this.systemBarColor);
     View decorView = window.getDecorView();
     int uiOptions;
     int lightNavigationBar;
@@ -1934,7 +1931,7 @@ public class System extends Service {
       uiOptions = getDeprecatedSystemUiVisibility(decorView);
       lightNavigationBar = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
 
-      if (themeType.equals("light")) {
+      if (lightBackground) {
         setDeprecatedSystemUiVisibility(
           decorView,
           uiOptions | lightNavigationBar
@@ -1954,7 +1951,7 @@ public class System extends Service {
     lightNavigationBar =
       WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
 
-    if (themeType.equals("light")) {
+    if (lightBackground) {
       decorView
         .getWindowInsetsController()
         .setSystemBarsAppearance(
@@ -1970,6 +1967,13 @@ public class System extends Service {
         uiOptions & ~lightNavigationBar,
         lightNavigationBar
       );
+  }
+
+  private boolean isColorLight(int color) {
+    double r = Color.red(color) / 255.0;
+    double g = Color.green(color) / 255.0;
+    double b = Color.blue(color) / 255.0;
+    return 0.299 * r + 0.587 * g + 0.114 * b > 0.5;
   }
 
   private int deprecatedFlagUiLightStatusBar() {

@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import { expect, it, vi } from "vitest";
+import formatDownloadProgress from "../../src/lib/downloadProgress.js";
 import { loadSourceModule } from "../helpers/loadSourceModule";
 
 it.each([
@@ -132,6 +133,7 @@ async function setup(platformId, manifest) {
 			"utils/Url": { join },
 			"utils/version": { isVersionGreater: () => true },
 			"./config": { API_BASE: "https://fixture.invalid" },
+			"./downloadProgress": formatDownloadProgress,
 			"./installState": {
 				new: async () => ({
 					exists: () => false,

@@ -2,9 +2,10 @@
 
 ## Current iOS app identity
 
-iOS now has one free app: bundle ID `app.acode`, Xcode target/scheme `runner`,
-and test target `runnerTests`. Both native code and the web bundle include the
-free advertising implementation regardless of Android's package-name selection.
+iOS now has one free app: bundle ID from `package.json.appleAppId`, Xcode
+target/scheme `runner`, and test target `runnerTests`. Both native code and the
+web bundle include the free advertising implementation regardless of Android's
+`androidPackageId` selection.
 Build commands and configuration are in [CONTRIBUTING.md](../CONTRIBUTING.md).
 The validation history below includes runs made before this consolidation;
 references to separate paid/free builds describe those earlier runs.
@@ -16,7 +17,9 @@ not establish feature parity.
 
 The template runtime stays in `platforms/ios/runner`, with native services under
 `runner/lib`. `Config.xcconfig` is ignored and reserved for local signing settings;
-public version and icon settings live in `runner.xcodeproj/project.pbxproj`.
+public icon settings live in `runner.xcodeproj/project.pbxproj`, while version,
+build number, display name and bundle ID are synced into it from `package.json`
+by `dev/sync.js`.
 The shared `runner/PrivacyInfo.xcprivacy` declares file metadata access in the
 sandbox and user-selected folders (`C617.1`, `3B52.1`), app-local preferences
 (`CA92.1`), elapsed-time measurements for search deadlines (`35F9.1`) and requested
@@ -38,8 +41,10 @@ the configured account and advertising services.
 - [ ] iOS capability checks in menus, settings, commands and runtime providers
 - [ ] Regression tests, simulator smoke tests, CI and contributor documentation
 
-Android intents/package launching, APK updates, all-files access permissions,
-Android battery controls and programmatic app exit remain platform exclusions.
+Android intents/package launching, APK updates, all-files access permissions
+and Android battery controls remain platform exclusions. The main menu offers
+Exit on iOS through `exit(0)`; Apple discourages programmatic termination, so
+App Review may flag it.
 Local terminals and native language-server processes use the ARM64 Alpine
 runtime described in [platforms/ios/Alpine/README.md](../platforms/ios/Alpine/README.md).
 It preserves Acode's terminal UI, AXS protocol and shell initialization script;

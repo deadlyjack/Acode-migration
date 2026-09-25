@@ -13,12 +13,12 @@ final class AppURLSchemeHandler: NSObject, WKURLSchemeHandler {
             task.didFailWithError(URLError(.badURL)); return
         }
         let head = task.request.httpMethod == "HEAD"
+        let files = AppFiles.shared
+        let resource = url.path.hasPrefix("/__cdvfile_") || url.path.hasPrefix("/__file__/") || url.path.hasPrefix("/__cache__/")
+            ? url.absoluteString
+            : files.application.appendingPathComponent("bundle").appendingPathComponent(url.path == "/" ? "index.html" : url.path).absoluteString
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let result = Result { () -> (Data, String) in
-                let files = AppFiles.shared
-                let resource = url.path.hasPrefix("/__cdvfile_") || url.path.hasPrefix("/__file__/") || url.path.hasPrefix("/__cache__/")
-                    ? url.absoluteString
-                    : files.application.appendingPathComponent("bundle").appendingPathComponent(url.path == "/" ? "index.html" : url.path).absoluteString
                 let fileURL = try files.resolve(resource)
                 return try files.coordinate(fileURL) { (try Data(contentsOf: $0), files.mimeType($0)) }
             }
@@ -31,7 +31,11 @@ final class AppURLSchemeHandler: NSObject, WKURLSchemeHandler {
                     task.didReceive(response)
                     if !head { task.didReceive(data) }
                     task.didFinish()
-                case .failure(let error): task.didFailWithError(error)
+                case .failure(let error):
+                    #if DEBUG
+                    print("[scheme] failed \(url.absoluteString) -> \(resource) code=\(FileFailure.code(error))")
+                    #endif
+                    task.didFailWithError(error)
                 }
             }
         }
