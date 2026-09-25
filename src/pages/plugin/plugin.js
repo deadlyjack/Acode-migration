@@ -118,15 +118,16 @@ export default async function PluginInclude(
 				}
 			}
 
-			const iconUrl = await helpers.toInternalUri(
-				Url.join(PLUGIN_DIR, id, installedPlugin.icon),
-			);
-			const iconData = await fsOperation(iconUrl).readFile();
-			const iconMimeType =
-				mimeTypes.lookup(installedPlugin.icon) || "image/png";
-			const icon = URL.createObjectURL(
-				new Blob([iconData], { type: iconMimeType }),
-			);
+			let icon;
+			if (installedPlugin.icon) {
+				const iconPath = Url.join(PLUGIN_DIR, id, installedPlugin.icon);
+				const iconData = await fsOperation(iconPath).readFile();
+				const iconMimeType =
+					mimeTypes.lookup(installedPlugin.icon) || "image/png";
+				icon = URL.createObjectURL(
+					new Blob([iconData], { type: iconMimeType }),
+				);
+			}
 			plugin = {
 				id,
 				icon,
