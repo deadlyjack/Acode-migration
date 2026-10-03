@@ -18,6 +18,17 @@ export function quoteArg(value: unknown): string {
 	return `'${str.replace(/'/g, "'\\''")}'`;
 }
 
+/**
+ * The bundled Ubuntu rootfs ships an empty /var/lib/apt/lists, so every apt
+ * install has to refresh the package lists first. A failed refresh must not
+ * abort the install: apt can still succeed from cached lists or cached archives,
+ * and the install command itself reports the real failure. debconf front-ends
+ * must stay non-interactive because a prompt (tzdata) would block the install.
+ */
+export function prepareAptCommand(command: string): string {
+	return `export DEBIAN_FRONTEND=noninteractive\napt-get update || echo "apt-get update failed; continuing with cached package lists" >&2\n${command}`;
+}
+
 export function formatCommand(
 	command: string | string[] | null | undefined,
 ): string {
